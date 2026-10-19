@@ -1026,3 +1026,19 @@ p.manual a, p.betan a, .bd-list a, .irow a { color: var(--cyan); }
 #qlIn { text-transform: uppercase; letter-spacing: .2em; width: 9.5em; }
 .qlman { margin-top: 10px; } .qlman summary { cursor: pointer; color: var(--dim); font-size: 13.5px; padding: 6px 0; }
 .qlman[open] summary { margin-bottom: 8px; }
+
+/* ---- V62 responsive: scale menus on big screens, compact on short ones, portrait field fits ---- */
+:root { --uiz: 1; }
+@media (min-width: 2200px) and (min-height: 1150px) { :root { --uiz: 1.3; } }
+@media (min-width: 3000px) and (min-height: 1600px) { :root { --uiz: 1.75; } }
+#lobby, #mydecks, #builder { zoom: var(--uiz); }
+#lobby, #mydecks, #builder { min-height: calc(100% / var(--uiz)); }
+.bd-deck { max-height: calc(100vh / var(--uiz) - 16px); }
+@media (min-width: 1700px) { #builder { max-width: 1680px; } }
+@media (max-height: 780px) and (min-width: 901px) {
+  #lobby { gap: 8px; padding-block: 10px 12px; }
+  .lb-menu button { padding-block: 7px; }
+  .lb-menu button b, .lb-menu button em { font-size: 17px; }
+}
+.stage-port #side { overflow: hidden; }
+.stage-port #detail { max-height: 100%; overflow: hidden; align-items: flex-start; }

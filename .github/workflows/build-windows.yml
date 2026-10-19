@@ -18,6 +18,9 @@ jobs:
       - name: Put the game inside the app
         shell: bash
         run: mkdir -p app/electron/game && cp dist/local/VanguardDeckLab.html app/electron/game/
+      - name: Version number (1.0.<build number>, used by auto-update)
+        working-directory: app/electron
+        run: npm version 1.0.${{ github.run_number }} --no-git-tag-version --allow-same-version
       - name: Install Electron
         working-directory: app/electron
         run: npm install
@@ -40,15 +43,20 @@ jobs:
           name: VanguardDeckLab-Windows
           path: |
             app/electron/dist/*.exe
+            app/electron/dist/latest.yml
             app/electron/smoke.png
-      - name: Latest release (download page for you and friends)
+      - name: Release (download page + auto-update feed)
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: latest
-          name: Vanguard Deck Lab (latest)
+          tag_name: v1.0.${{ github.run_number }}
+          name: Vanguard Deck Lab 1.0.${{ github.run_number }}
           prerelease: false
           make_latest: true
-          files: app/electron/dist/*.exe
+          files: |
+            app/electron/dist/*.exe
+            app/electron/dist/*.blockmap
+            app/electron/dist/latest.yml
           body: |
-            ดาวน์โหลด **VanguardDeckLab-Setup** (ติดตั้งแล้วมีไอคอนบนเดสก์ท็อป) หรือ **VanguardDeckLab-Portable** (เปิดได้เลยไม่ต้องติดตั้ง)
+            ดาวน์โหลด **VanguardDeckLab-Setup** (ติดตั้งแล้วมีไอคอนบนเดสก์ท็อป และ**อัปเดตตัวเองอัตโนมัติ**) หรือ **VanguardDeckLab-Portable** (เปิดได้เลยไม่ต้องติดตั้ง แต่จะแค่แจ้งว่ามีเวอร์ชันใหม่)
             Windows อาจขึ้นหน้าจอ "Windows protected your PC" เพราะไฟล์ไม่ได้เซ็นชื่อ ให้กด More info → Run anyway
+            commit ${{ github.sha }}

@@ -15,9 +15,49 @@
   "build": {
     "appId": "lab.vanguard.deck",
     "productName": "Vanguard Deck Lab",
-    "files": ["main.js", "vg.ico", "game/**"],
-    "win": { "icon": "vg.ico", "target": [{ "target": "nsis", "arch": ["x64"] }, { "target": "portable", "arch": ["x64"] }] },
-    "nsis": { "oneClick": true, "perMachine": false, "createDesktopShortcut": true, "shortcutName": "Vanguard Deck Lab", "artifactName": "VanguardDeckLab-Setup-${version}.exe" },
-    "portable": { "artifactName": "VanguardDeckLab-Portable-${version}.exe" }
+    "files": [
+      "main.js",
+      "vg.ico",
+      "game/**"
+    ],
+    "win": {
+      "icon": "vg.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "shortcutName": "Vanguard Deck Lab",
+      "artifactName": "VanguardDeckLab-Setup-${version}.exe",
+      "differentialPackage": true
+    },
+    "portable": {
+      "artifactName": "VanguardDeckLab-Portable-${version}.exe"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "AclAireZ",
+        "repo": "vanguard-deck-lab",
+        "releaseType": "release"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
   }
 }
