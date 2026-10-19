@@ -1,0 +1,20 @@
+# name<TAB>family code (v = no ability)<TAB>deck limit — facts checked on the Japanese official card pages
+Gakkihei	v	8
+Gold Coin Box	v	8
+Konpeitou	v	8
+Gathering Feelings	v	8
+Each of their Dreams	v	8
+Together with Everyone	v	8
+The "Strongest" by Nature	v	8
+Fighting Each Other is the Battle of Men	v	8
+Battle of the Abyss	v	8
+Plant	v	0
+Energy	v	0
+Infinity Eyes	v	0
+Jackknife "Berserker"	v	0
+Boost your Employees! Takaaki Kidani	v	0
+Intercept in the Front Lines! Takaaki Kidani	v	0
+Break Through Your Limits with Twin Drive! Takaaki Kidani	v	0
+Shining Star-gazer Sorcerer, Merlin	v	0
+Spirit of the Elegant Flower Nation, Plumeria	v	0
+The Battle Aiming to be the Shaman King	v	0

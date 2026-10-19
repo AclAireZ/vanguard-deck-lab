@@ -1,0 +1,275 @@
+# Order subtypes the card lists do not give. Name<TAB>Subtype (kept by hand)
+Crimson Moonlight	Crimson Moon
+Enveloping the Planet is a Crimson Disease	Crimson Moon
+Eternal Gran Magick, Segre Ljos	Gran Magick
+Fantum Gran Magick, Glid Radeaur	Gran Magick
+Mirazh Gran Magick, Reindalt Galvaton	Gran Magick
+Galactic Base "A.I.A.S."	Base
+Slaying Strategy: Raging Strike	Strategy
+Signalize Queen's Order	Queen's Order
+Vitalize Queen's Shield	Queen's Order
+Idealize Queen's Fort	Queen's Order
+Neatness Meteor Shower	Meteorite
+Falling Hellhazard	Meteorite
+Experiment Successful!	Research
+Twilight Boundary	World
+Galaxy Central Prison, Galactolus	Prison
+Galaxy Eternal Prison, Galactolus	Prison
+Everlasting Sapphire	Gem
+Truehearted Ruby	Gem
+Edo Castle Infiltration Investigation	Event
+Hidden Treasure Village ~Flower Gathering~	Event
+Regiment Battle ~Seaside Camp~	Event
+Special Investigation: Bunkyuu Tosahan	Event
+Special Investigation: Jurakutei	Event
+Special Investigation: Keichou Kumamoto	Event
+Special Investigation: Keiou Koufu	Event
+Special Investigation: Tenpou Edo	Event
+Underground Treasure Chest	Event
+Six-Flower Fractale	Song
+Madder Red Runway	Song
+Twilight Sound of Waves	Song
+Romantic Happiness	Song
+Truehearted Ruby	Cursed Play
+Everlasting Sapphire	Cursed Play
+Anathema Slap Twinkle	Cursed Play
+Cursed Sugar Sparkle	Cursed Play
+Wishing Your Happiness	Cursed Play
+Lyrical ShootingStarS	Magazine
+Lyrical ShootingStarS ☆ Special Issue	Magazine
+# races of Japanese-only cards (translated from the Japanese card list)
+Strongest Deck-building, Gremlin	Buddyfighter/Disaster
+Black Dragon of Demise, Death Tallica	Black Dragon/Abyss
+Death Dragon, Deathgaze Dragon	Black Dragon/Death/Abyss
+Abyss Symphony	Magic/Abyss
+Black Dragon Priest, Gremlin	Black Dragon/Abyss/Disaster
+Extreme Prison, Zwinger	Black Dragon/Abyss
+Death Ruler, Gallows	Death/Abyss
+Death Dragon Knight, Davide	Knight/Black Dragon/Disaster
+Darkness Dragon World	Flag
+Kazuma Kiryu	Like a Dragon/Tojo Clan
+Akira Nishikiyama	Like a Dragon/Tojo Clan/Nishikiyama Family
+Makoto Date	Like a Dragon/Police
+Goro Majima	Like a Dragon/Tojo Clan/Majima Family
+Kaoru Sayama	Like a Dragon/Police
+Ryuji Goda	Like a Dragon/Omi Alliance
+Yoshitaka Mine	Like a Dragon/Tojo Clan/Shiramine Association
+Daigo Dojima	Like a Dragon/Tojo Clan
+Shintaro Kazama	Like a Dragon/Tojo Clan/Kazama Family
+Reina	Like a Dragon
+Jo Amon	Like a Dragon
+Kazuto Arase	Like a Dragon/Tojo Clan/Nishikiyama Family
+Kazuki	Like a Dragon
+Lau Ka Long	Like a Dragon
+10 Billion Girl, Haruka Sawamura	Like a Dragon
+Osamu Kashiwagi	Like a Dragon/Tojo Clan/Kazama Family
+Sotaro Komaki	Like a Dragon
+The Florist of Sai	Like a Dragon
+Junichi Sudo	Like a Dragon/Police
+Shinji Tanaka	Like a Dragon/Tojo Clan/Nishikiyama Family
+Pocket Circuit Fighter	Like a Dragon
+Matsushige	Like a Dragon/Tojo Clan/Nishikiyama Family
+Yuya	Like a Dragon
+Yumi Sawamura	Like a Dragon
+Susumu Gondawara	Like a Dragon/Gondawara Family
+Jin Goda	Like a Dragon/Omi Alliance
+Yukio Terada	Like a Dragon/Tojo Clan/Omi Alliance
+Yayoi Dojima	Like a Dragon/Tojo Clan
+Il Yu-Jin	Like a Dragon
+Tamiyo Sayama	Like a Dragon
+Morning Glory Orphanage's Eldest Daughter, Haruka Sawamura	Like a Dragon
+Tsuyoshi Kanda	Like a Dragon/Tojo Clan/Nishikiyama Family
+Miya-san	Like a Dragon
+Morning Glory Orphanage: Precious Place	Like a Dragon
+Dragon of Dojima, Kazuma Kiryu	Like a Dragon/Tojo Clan
+Neo: Resonance Mode	Demi-human
+Yakumo: Divine Wild-God Armament	Holy Knight
+Elle: Fallen Mode	Demi-human
+“Revolutionary” Who Soars Through a Turbulent Age, Kirinji	Holy Knight
+"Jack-of-All-Trades" of the Dream World, Möbius	Demi-human
+Nike: Victorious Form	Demi-human
+Kuon: Reaper 〈Xylophonist〉	Demi-human
+Magia: Pure-White Magical Girl	Demi-human
+"Lion King" of Crimson Lightning, Arslan	Holy Knight
+Smile-catching God of Happiness, Ebisu	God
+"Goddess of Rivalry" Who Promotes Advancement, Eris	God
+"Restorer" of Art, Renaissance	Demi-human
+"Bard" Who Brings Transformation, Chihaya	Demi-human
+Vanitas: Demon Slayer	Demi-human
+"Ferryman" of the Afterworld, Sanzu	Demi-human
+"Ninja of Determination" Who Brings Change, Iroha	Demi-human
+Sin Guilty: Conviction	Dragon
+Cavern "Avenger", Monte Cristo	Demi-human
+Joy-bringing "Goddess of Music", Muse	God
+"Trailblazer" of the Freedomless World, Satori	Demi-human
+Oathbound "Alchemist”, Faust	Holy Knight
+All for Victory, Rouga Aragami	Buddyfighter/Disaster
+Armorknight Cerberus "A"	Armorknight
+Shichuu Katsuro	Magic/Battle Aura
+In Pursuit of Power, Kiri Hyoryu	Buddyfighter/Disaster
+For Her Ambition, Sofia Sakharov	Buddyfighter/Disaster
+Valkyrie, All-knowing Alvidol	Asgard
+Sunbel Gard	Magic/Asgard/Rune
+To Seize Victory, Magoroku Shido	Buddyfighter/Disaster
+Purgatory Knight Upholding Justice, Tasuku Ryuenji	Buddyfighter/Disaster
+Purgatory Knights Leader, Demios Sword Dragon	Armed Dragon
+Demon Lord of the End, Kyoya	Dragon/God/Disaster
+Enigmatic Fortune-teller, Sofia	Star
+World-ending Power of Azi Dahaka, Kyoya Gaen	Buddyfighter
+Armorknight Demon	Armorknight
+Armorknight Cerberus	Armorknight
+Self-proclaimed Healing Alchemist, Kabala	Disaster
+God of Sun and Death, Bloody King	Asgard/Star/Death
+Ice Blade, Joker	Asgard
+Moon God, Selene	Olympia/Star
+Giant God of Phantom Stars, Astraeus	Olympia/Star
+Gleipnir	Magic/Asgard
+Death Wizard Dragon	Black Dragon/Death
+Death Ruler, Mastermind	Death/Abyss
+Purgatory Knights, Gairahm Lance Dragon	Armed Dragon
+Purgatory Knights, Evil Grave Dragon	Armed Dragon
+Purgatory Knights, Crossbow Dragon	Armed Dragon
+Nightmare Revive	Magic/Death
+Evil Dragon King Sword, Aqulta Gwaneff	Item/Dragon/Weapon
+Fang of the Demon Lord, Rouga	Disaster
+Masked Swordsman, Kiri	Asgard
+Demon Lord's Puppet, Terumi	Olympia/Disaster
+Operation Restrain	Magic/War God Machine
+Barbed Wire	Magic/War God Machine
+Armorknight Eagle "A"	Armorknight
+Armorknight Gargoyle "A"	Armorknight
+Drill Bunker!!	Special Move/Battle Aura
+Hraesvelgr, Devourer of the Dead	Asgard
+Star God, Astraeus	Olympia/Star
+Loki the Ehrgeiz	Asgard
+Great Spell, Thunder of Zeus	Magic/Olympia
+Great Spell, Ragnarok	Magic/Asgard
+Holy Grail	Magic
+Great Fate, Frozen Stars	Magic/Star
+Death Ruler, Curse	Death/Abyss
+Black Dragon, Maveltaker	Black Dragon
+Death Ruler, Vrykolakas	Death/Abyss
+Bloody Moon Dragon	Black Dragon/Abyss
+Purgatory Knights, Eraser Hand Dragon	Armed Dragon
+Death Grip	Magic/Death
+Midnight Shadow	Magic/Death
+Evil Death Scythe	Item/Abyss/Weapon
+Slow Pain Fall	Special Move/Black Dragon
+Distortion Punisher!!	Special Move/Dragon
+Nightmare Despair	Special Move/Death/Abyss
+Brutal Disaster!	Special Move/Abyss
+Armor of the Purgatory Demon Swordsman	Item/Weapon/Disaster
+Armorknight Griffin "A"	Armorknight
+Top of Sengoku Academy, Rouga Aragami	Buddyfighter/Disaster
+Armorknight Ogre "A"	Armorknight
+Armorknight Kali	Armorknight
+Criminal Fighter "Wolf", Rouga Aragami	Buddyfighter/Disaster
+Armorknight Cerberus "SD"	Armorknight
+Danger World	Flag
+Explosive Axe, Ricdeau Demon Slay	Item/Battle Aura/Weapon
+Thunderous Quake Strike	Magic/Battle Aura
+Fighting Spirit Infusion	Magic/Battle Aura
+Fanged Dragon Roar	Magic/Battle Aura
+Demon Slay Dimension Slash	Magic
+Blood Flow Breath	Magic/Battle Aura
+Dungeon World	Flag
+Rolling Stone	Magic
+Quiescence of Cassiade	Magic
+Mysterious Vice-president, Sofia Sakharov	Buddyfighter/Disaster
+Aibo Academy, Sofia Sakharov	Buddyfighter/Disaster
+Aibo Academy, Kiri Hyoryu	Buddyfighter
+Capella Auriga	Olympia/Star
+Sirius Laelaps	Olympia/Star
+Legend World	Flag
+Great Spell, Fimbulwinter	Magic/Asgard
+Star Bow, Artemis Arrow	Item/Star/Weapon
+Rune Staff	Item/Asgard/Rune
+Berserk Gard	Magic/Asgard/Rune
+Algiz Gard	Magic/Asgard/Rune
+Thurisaz Gard	Magic/Rune
+Asclepius' Panacea	Magic/Olympia
+Cheating Tactics, Davide Yamazaki	Buddyfighter/Disaster
+The Student Council President's Other Face, Magoroku Shido	Buddyfighter/Disaster
+His Own Convictions, Gremlin	Buddyfighter/Disaster
+The Purgatory Knight's True Identity, Tasuku Ryuenji	Buddyfighter/Disaster
+Aibo Academy, Magoroku Shido	Buddyfighter/Disaster
+Boy Full of Malice, Davide Yamazaki	Buddyfighter/Disaster
+Deathgaze Dragon "SD"	Black Dragon/Death/Abyss
+Death Ruler, Gallows "SD"	Death/Abyss
+Death Ruler, Baaliol	Death/Abyss
+Genius Deck Builder, Gremlin	Buddyfighter/Disaster
+Mysterious Fighter, Purgatory Knight	Buddyfighter/Disaster
+Black Dragon, Cold Blade	Black Dragon
+Purgatory Knights, Angry Hand Dragon	Armed Dragon
+Shatter Thy Body and Support Me	Magic/Dragon
+Purgatory Sword, Fatal	Item/Dragon/Weapon
+Dark Energy	Magic/Black Dragon
+Death Astray	Magic/Death/Abyss
+Devil Stigma	Magic/Abyss
+Dragon Shield, Black Dragon Shield	Magic/Black Dragon
+Chief Gatekeeper, Sido	Death/Abyss/Disaster
+Demon Lord's Right Hand, Sofia	Star/Disaster
+Tiger Rookie, Toramaru Utsunomiya	Chronicle
+Chrono Striker, Fei Rune	Chronicle
+Swift-footed Dark Side, Hayato Matatagi	Earth Eleven/Chronicle
+Indomitable Wild Keeper, Munemasa Ibuki	Earth Eleven/Chronicle
+Silent Guardian Deity, Masaya Nishikage	Chronicle
+Flame Dance	Special Move/Defense
+The Matrix	Special Move/Defense
+The Wall	Special Move/Defense
+The Tower	Special Move/Defense
+High Dog Breeder, Akane (JP)	Human
+Steam Fighter, Amber (JP)	Gearoid
+Deputize Bear (JP)	High Beast
+Pongal (JP)	High Beast
+Mage of Crimson Light, Lamprit	Human
+Knight of Straight Shot, Iltid	Human
+Steam Performer, Tougue (PR)	Gearoid
+# Inazuma Eleven units: school / Story or Chronicle (from the Japanese card list)
+Football Monster, Harper Evans	Raimon Junior High/Story
+Versatile Striker, Nikas Himmelstein	Northbright Middle School/Story
+Snow Outlaw, Shawn Froste (Aiden's Personality)	Alpine Junior High/Chronicle
+Meteor Prince, Xavier Foster	Inazuma National/Chronicle
+Dark Nova, Victor Blade	Raimon Junior High/Chronicle
+Goopy Gloopy Girl, Goldie Lemmon	Raimon Junior High/Chrono Storm/Chronicle
+Devil on the Pitch, Elliot Ember	Polestar Academy/Chronicle
+Emperor of Tactics, Heath Moore	Lunar Prime Academy/Chronicle
+Peak Charisma, Darian Moonward	Raimon Junior High/Story
+Cool-Headed Judge, Ivan Mercer	Northbright Middle School/Story
+Hot-Blooded Sumo Powerhouse, Winsor Compete	South Cirrus Junior High/Story
+The Possessed Actor, Charis Benzaie	South Cirrus Junior High/Story
+Seeker of Life's Answers, Maine Alsop	South Cirrus Junior High/Story
+Challenger Aiming for the Top, Dario Highton	South Cirrus Junior High/Story
+Second-Life Class President, Amelia Rainwalker	South Cirrus Junior High/Story
+The Pursuer of Beauty, Marisol Cavallo	South Cirrus Junior High/Story
+Master of the Way of Kendo, Meridia Althoff	South Cirrus Junior High/Story
+All-Seeing Strategist, Tai Richter	South Cirrus Junior High/Story
+The Unstoppable Rampage, Davin Bullock	South Cirrus Junior High/Story
+Legerdemain Virtuoso, Lycus Foxworth	South Cirrus Junior High/Story
+Boisterous Surfer, Florent Shorleigh	South Cirrus Junior High/Story
+Auspicious Country Girl, Antonia Felicier	South Cirrus Junior High/Story
+Metallic Heart, Kelvin Steelborne	South Cirrus Junior High/Story
+Butler of Beguilement, Lemmy Stretchen	South Cirrus Junior High/Story
+The Wild Rockstar, Starla Thorn	South Cirrus Junior High/Story
+Snow Prince, Shawn Froste (Shawn's Personality)	Alpine Junior High/Chronicle
+Fearless Tactician, Destin Billows	South Cirrus Junior High/Story
+Football Restoration Advocate, Destin Billows	South Cirrus Junior High/Story
+Shoot-out Mania, Destin Billows	South Cirrus Junior High/Story
+The Late Newcomer, Destin Billows	South Cirrus Junior High/Story
+Legs That Pierce the Sky, Briar Bloomhurst	South Cirrus Junior High/Story
+Link-Up All-Rounder, Cedric Freud	South Cirrus Junior High/Story
+Graceful Dancer on the Pitch, Raika Shinohara	South Cirrus Junior High/Story
+Lightning-Fast Giant, Cade Shelby	South Cirrus Junior High/Story
+Hands that Command the Wind, Alix La Fontaine	South Cirrus Junior High/Story
+Physical Juggernaut, Thierry Reyes	South Cirrus Junior High/Story
+Legendary Goalkeeper, Mark Evans	Raimon Junior High/Chronicle
+Ardent Guardian, Mark Evans	Raimon Junior High/Chronicle
+Flaming Striker, Axel Blaze	Raimon Junior High/Chronicle
+Talented Gamemaker, Jude Sharp	Raimon Junior High/Chronicle
+Flurry Sprinter, Nathan Swift	Raimon Junior High/Chronicle
+Breezy Dreamer, Arion Sherwind	Raimon Junior High/Chronicle
+Divine Maestro, Riccardo Di Rigo	Raimon Junior High/Chronicle
+Sunny Footy Fledgling, Sonny Wright	Raimon Junior High/Chronicle
+Keyman Lockdown	Tactics
+Baton of the Heavens	Tactics
+Imprisoned XII (JP)	Music/Ave Mujica

@@ -1,0 +1,426 @@
+# Clan icons of D-format cards (official English card list, search by clan, 2026-10-12). Name<TAB>Clan. Cards the English list does not have yet: see the name rules in tools/mkdb.mjs.
+Solitary Knight, Gancelot	Royal Paladin
+Knight of Starry Skies, Zero	Royal Paladin
+Leading Jewel Knight, Salome	Royal Paladin
+Pure Heart Jewel Knight, Ashlei	Royal Paladin
+Broken Heart Jewel Knight, Ashlei "Яeverse"	Royal Paladin
+Prevail Jewel Knight, Yvain	Royal Paladin
+Explode Jewel Knight, Laile	Royal Paladin
+Dogmatize Jewel Knight, Sybill	Royal Paladin
+Jewel Knight, Swordmy	Royal Paladin
+Charging Jewel Knight, Morvidus	Royal Paladin
+Fruiting Jewel Knight, Eunice	Royal Paladin
+Calling Jewel Knight, Christine	Royal Paladin
+Dreaming Jewel Knight, Tiffany	Royal Paladin
+Amulet Pure Eagle	Royal Paladin
+Sentflare Dracokid	Royal Paladin
+Flash Shield, Iseult	Royal Paladin
+Innocent Ray Dragon	Royal Paladin
+Climax Jewel Knight Lord, Evangeline	Royal Paladin
+Divine Knight of Triumph, Eulogias	Royal Paladin
+Divine Knight of Condensed Light, Olbius Avalon	Royal Paladin
+Holy Dragon, Crystaluster Dragon	Royal Paladin
+Divine Knight of Twin Absolutes, Saint of Twin Sword	Royal Paladin
+Aerial Divine Knight, Altmile	Royal Paladin
+Faithful Sacred Staff, Morgause	Royal Paladin
+Holy Beast, Divine Maskkgal	Royal Paladin
+Holy Dragon, Laserguard Dragon	Royal Paladin
+Vivid Sacred Staff, Andragius	Royal Paladin
+King of Knights, Alfred	Royal Paladin
+Brilliant Wings Star Dragon, Vyrgilla	Royal Paladin
+Little Sage, Marron	Royal Paladin
+Wingal Brave	Royal Paladin
+Blaster Blade, The Vanguard!!!	Royal Paladin
+Blaster Blade	Royal Paladin
+Wingal	Royal Paladin
+Barcgal	Royal Paladin
+Soul Saver Dragon	Royal Paladin
+Knight of Truth, Gordon	Royal Paladin
+Knight of Silence, Gallatin	Royal Paladin
+Lake Maiden, Lien	Royal Paladin
+Bringer of Good Luck, Epona	Royal Paladin
+Flogal	Royal Paladin
+Margal	Royal Paladin
+Yggdrasil Maiden, Elaine	Royal Paladin
+High Dog Breeder, Akane	Royal Paladin
+Pongal	Royal Paladin
+Majesty Lord Blaster	Royal Paladin
+Knight of Loyalty, Bedivere	Royal Paladin
+Knight of Friendship, Kay	Royal Paladin
+Bravery To Stand Against, Will to Pierce Through	Royal Paladin
+Draganger, Ogma	Shadow Paladin
+Dragwizard, Fuamnach	Shadow Paladin
+Phantom Blaster Dragon	Shadow Paladin
+Darkness Maiden, Macha	Shadow Paladin
+Skull Witch, Nemain	Shadow Paladin
+Blaster Dark	Shadow Paladin
+Black Sage, Charon	Shadow Paladin
+Dark Mage, Badhabh Caar	Shadow Paladin
+Knight of Darkness, Rugos	Shadow Paladin
+Dark Shield, Mac Lir	Shadow Paladin
+Witch of Nostrum, Arianrhod	Shadow Paladin
+Blaster Javelin	Shadow Paladin
+Fullbau	Shadow Paladin
+Grim Reaper	Shadow Paladin
+Darkside Trumpeter	Shadow Paladin
+Howl Owl	Shadow Paladin
+Abyss Healer	Shadow Paladin
+Revenger, Raging Form Dragon	Shadow Paladin
+Revenger, Raging Fall Dragon "Яeverse"	Shadow Paladin
+Revenger, Dragruler Phantom	Shadow Paladin
+Illusionary Revenger, Mordred Phantom	Shadow Paladin
+Revenger, Slay Hex Dragon	Shadow Paladin
+Dark Cloak Revenger, Tartu	Shadow Paladin
+Revenger, Darkbless Angel	Shadow Paladin
+Wily Revenger, Mana	Shadow Paladin
+Dark Armor Revenger, Rinnal	Shadow Paladin
+Self-Control Revenger, Rakia	Shadow Paladin
+Detecting Revenger, Aife	Shadow Paladin
+Crisis Revenger, Fritz	Shadow Paladin
+Dagger of Peaceful Passing, Pryderi	Shadow Paladin
+Knight of Evil Spear, Gillingr	Shadow Paladin
+Astral Chain Dragon	Shadow Paladin
+True Revenger, Raging Rapt Dragon	Shadow Paladin
+Dark Knight, Irgahn Vert	Shadow Paladin
+Dark Knight, Crow Cruach	Shadow Paladin
+Dark Dragon, Chainrancor Dragon	Shadow Paladin
+True Revenger, Dragruler Revenant	Shadow Paladin
+Dragprincipal, Morfessa	Shadow Paladin
+Dark Dragon, Darkveil Dragon	Shadow Paladin
+Dark Dragon, Deep Griever Dragon	Shadow Paladin
+Witch Queen of Iniquity, Jeliddo	Shadow Paladin
+Dark Knight, Ludvik	Shadow Paladin
+Phantom Blaster Overlord	Shadow Paladin
+Dragheart, Luard	Shadow Paladin
+Dragwizard, Liafail	Shadow Paladin
+Dragwizard, Knies	Shadow Paladin
+Dragprince, Rute	Shadow Paladin
+Solemn Clout Dragon	Shadow Paladin
+Dragwizard, Morfessa	Shadow Paladin
+Dragsaver, Esras	Shadow Paladin
+Abyssal Owl	Shadow Paladin
+Dragwizard, Semias	Shadow Paladin
+Dragstrider, Luard	Shadow Paladin
+Dragdriver, Luard	Shadow Paladin
+Blazing Lion, Platina Ezel	Gold Paladin
+Incandescent Lion, Blond Ezel	Gold Paladin
+Listener of Truth, Dindrane	Gold Paladin
+Knight of Superior Skills, Beaumains	Gold Paladin
+Silver Fang Witch	Gold Paladin
+Knight of Elegant Skills, Gareth	Gold Paladin
+Crimson Lion Cub, Kyrph	Gold Paladin
+Ultimate Regalia of Almighty, Minerva	Genesis
+Gleaming Lord, Uranus	Genesis
+Prometheus of Dancing Lights	Genesis
+Atlas of Heavenly Sphere	Genesis
+Pan of New Style	Genesis
+Quaking Heavenly Dragon, Astraios Dragon	Genesis
+Astraia of the Full Heavens	Genesis
+Phosphoros of Auspicious Light	Genesis
+Deputize Bear	Genesis
+Administrator of Hope, Pandora	Genesis
+Battle Maiden, Kukurihime	Genesis
+Cyber Tiger	Genesis
+Talisman Angel	Genesis
+Witch of Big Pots, Laurier	Genesis
+Giant Deity of Distant World, Valkerion	Genesis
+Omniscience Regalia, Minerva	Genesis
+Regalia of Wisdom, Angelica	Genesis
+Witch of Ravens, Chamomile	Genesis
+Witch of Frogs, Melissa	Genesis
+Apple Witch, Cider	Genesis
+Vivid Rabbit	Genesis
+Blue Storm Supreme Dragon, Glory Maelstrom	Aqua Force
+Blue Storm Karma Dragon, Maelstrom "Яeverse"	Aqua Force
+Blue Storm Dragon, Maelstrom	Aqua Force
+Tidal Assault	Aqua Force
+Wheel Assault	Aqua Force
+Marine General of the Restless Tides, Algos	Aqua Force
+Tear Knight, Theo	Aqua Force
+Officer Cadet, Erikk	Aqua Force
+Silver Thorn Dragon Empress, Venus Luquier	Pale Moon
+Parallel Megatrick, Fairfield	Pale Moon
+Masked Magician, Harri	Pale Moon
+Card Dealer, Jacqueline	Pale Moon
+Moonlight Melody Tamer, Betty	Pale Moon
+Happiness Collector	Pale Moon
+Flying Manticore	Pale Moon
+Darkside Princess	Pale Moon
+Cutie Paratrooper	Pale Moon
+Masquerade Bunny	Pale Moon
+Darkside Mirror Master	Pale Moon
+Dragon Masquerade, Harri	Pale Moon
+Jester Demonic Dragon, Lunatec Dragon	Pale Moon
+Silver Thorn Dragon Tamer, Luquier	Pale Moon
+Silver Thorn, Rising Dragon	Pale Moon
+Silver Thorn, Breathing Dragon	Pale Moon
+Silver Thorn Marionette, Lilian	Pale Moon
+Silver Thorn Assistant, Irina	Pale Moon
+Silver Thorn Assistant, Ionela	Pale Moon
+Genesis Dragon, Trans-else Messiah	Link Joker
+Lady Battler of the Black Dwarf	Link Joker
+Genesis Dragon, Amnesty Messiah	Link Joker
+Genesis Dragon, Excelics Messiah	Link Joker
+Alter Ego Messiah	Link Joker
+Arrester Messiah	Link Joker
+Awaking Messiah	Link Joker
+Asleep Messiah	Link Joker
+Sacrifice Messiah	Link Joker
+Destiny Dealer	Link Joker
+Flowers in Vacuum, Cosmo Wreath	Link Joker
+Neon Messiah	Link Joker
+Star-vader, Infinite Zero Dragon	Link Joker
+Star-vader, Chaos Breaker Dragon	Link Joker
+Star-vader, Colony Maker	Link Joker
+Furious Claw Star-vader, Niobium	Link Joker
+Prison Gate Star-vader, Palladium	Link Joker
+Demon Claw Star-vader, Lanthanum	Link Joker
+Strike Star-vader, Krypton	Link Joker
+Unrivaled Star-vader, Radon	Link Joker
+Hollow Twin Blades, Binary Star	Link Joker
+Mana Shot Star-vader, Neon	Link Joker
+Earnest Star-vader, Selenium	Link Joker
+Dancing Cutlass	Granblue
+Pirate King of Redemption, Dragut	Granblue
+Vampire Princess of Night Fog, Nightrose	Granblue
+Pirate Swordsman, Colombard	Granblue
+Parting Shade	Granblue
+Undying Departed, Grenache	Granblue
+Mighty Rogue, Nightstorm	Granblue
+Witch Doctor of Languor, Negrolazy	Granblue
+Tommy the Ghostie Brothers	Granblue
+Witch Doctor of Powdered Bone, Negrobone	Granblue
+Waterspout Djinn	Granblue
+Mist Phantasm Pirate King, Nightrose	Granblue
+Ghostie Great King, Obadiah	Granblue
+Battle Sister, Cocoa	Oracle Think Tank
+Bellicosity Dragon	Kagero
+Dragonic Overlord	Kagero
+Dragon Knight, Nehalem	Kagero
+Embodiment of Armor, Bahr	Kagero
+Lizard Soldier, Conroe	Kagero
+Vortex Dragon	Kagero
+Berserk Dragon	Kagero
+Wyvern Strike, Tejas	Kagero
+Dragon Monk, Gojo	Kagero
+Wyvern Strike, Jarran	Kagero
+Wyvern Guard, Barri	Kagero
+Demonic Dragon Mage, Rakshasa	Kagero
+Embodiment of Spear, Tahr	Kagero
+Dragon Dancer, Monica	Kagero
+Dragon Monk, Genjo	Kagero
+Flame of Promise, Aermo	Kagero
+Lizard Runner, Undeux	Kagero
+Dragonic Overlord the End	Kagero
+Burning Horn Dragon	Kagero
+Enma Stealth Rogue, Mujinlord	Nubatama
+Stealth Beast, Tamahagane "Metsu"	Nubatama
+Demon Stealth Dragon, Shiranui "Oboro"	Nubatama
+Stealth Dragon, Genkai	Nubatama
+Stealth Dragon, Seizui	Nubatama
+Stealth Dragon, Madoi	Nubatama
+Stealth Dragon, Shiranui	Nubatama
+Stealth Dragon, Fuurai	Nubatama
+Stealth Dragon, Utsuroi	Nubatama
+Stealth Beast, Katarigitsune	Nubatama
+Stealth Dragon, Tenrei	Nubatama
+Evil-eye Hades Emperor, Shiranui "Mukuro"	Nubatama
+Enma Stealth Dragon, Maguntenbu	Nubatama
+Super Dimensional Robo, Daiyusha	Dimension Police
+Super Dimensional Robo, Dailady	Dimension Police
+Dimensional Robo, Daimariner	Dimension Police
+Dimensional Robo, Daidragon	Dimension Police
+Dimensional Robo, Daibattles	Dimension Police
+Dimensional Robo, Dailander	Dimension Police
+Dimensional Robo, Goyusha	Dimension Police
+Glory Maker	Dimension Police
+Super Dimensional Robo, Shadowkaiser	Dimension Police
+Super Dimensional Robo, Daikaiser	Dimension Police
+Dimensional Robo, Kaizard	Dimension Police
+Dimensional Robo, Kaisergrader	Dimension Police
+Dimensional Robo, Corekaiser	Dimension Police
+Doreen the Thruster	Dark Irregulars
+Stil Vampir	Dark Irregulars
+Demon World Marquis, Amon	Dark Irregulars
+Imprisoned Fallen Angel, Saraqael	Dark Irregulars
+Demon of Aspiration, Amon	Dark Irregulars
+Poet of Darkness, Amon	Dark Irregulars
+Vermillion Gatekeeper	Dark Irregulars
+Interdimensional Dragon, Chronoscommand Dragon	Gear Chronicle
+Glimmer Breath Dragon	Gear Chronicle
+Chronodragon Nextage	Gear Chronicle
+Interdimensional Dragon, Faterider Dragon	Gear Chronicle
+Chronojet Dragon	Gear Chronicle
+Upstream Dragon	Gear Chronicle
+Steam Fighter, Balih	Gear Chronicle
+Smokegear Dragon	Gear Chronicle
+Steam Scara, Gigi	Gear Chronicle
+Steam Breath Dragon	Gear Chronicle
+Masergear Dragon	Gear Chronicle
+Steam Maiden, Arlim	Gear Chronicle
+Chrono Dran	Gear Chronicle
+Interdimensional Dragon, Mystery-flare Dragon	Gear Chronicle
+Steam Fighter, Amber	Gear Chronicle
+Steam Battler, Dadasig	Gear Chronicle
+Stomach Clock Gear Rabbit	Gear Chronicle
+Luckypot Dracokid	Gear Chronicle
+Steam Maiden, Uluru	Gear Chronicle
+Aurora Star, Coral	Bermuda Triangle
+PR♥ISM-Image, Vert	Bermuda Triangle
+PR♥ISM-Image, Rosa	Bermuda Triangle
+Top Idol, Aqua	Bermuda Triangle
+PR♥ISM-Image, Clear	Bermuda Triangle
+Mermaid Idol, Sedna	Bermuda Triangle
+Mermaid Idol, Elly	Bermuda Triangle
+Shiny Star, Coral	Bermuda Triangle
+Fresh Star, Coral	Bermuda Triangle
+Angelic Star, Coral	Bermuda Triangle
+Bermuda Triangle Cadet, Shizuku	Bermuda Triangle
+Costume Idol, Alk	Bermuda Triangle
+Prism on the Water, Myrtoa	Bermuda Triangle
+White Lily Musketeer, Cecilia	Neo Nectar
+Thorn Lily Musketeer, Cecilia "Яeverse"	Neo Nectar
+Peony Musketeer, Martina	Neo Nectar
+Lycoris Musketeer, Vera	Neo Nectar
+Pansy Musketeer, Sylvia	Neo Nectar
+Peony Musketeer, Toure	Neo Nectar
+Lycoris Musketeer, Saul	Neo Nectar
+Water Lily Musketeer, Ruth	Neo Nectar
+Dandelion Musketeer, Mirkka	Neo Nectar
+Anthurium Musketeer, Gastone	Neo Nectar
+Broccolini Musketeer, Kirah	Neo Nectar
+Happy Lucky	Neo Nectar
+Maiden of Polyantha	Neo Nectar
+Maiden of Blossom Rain	Neo Nectar
+Pure-hearted Flower Maiden, Fiorenza	Neo Nectar
+Maiden Lily Musketeer Captain, Virginal Cecilia	Neo Nectar
+Flower Princess of Compassion, Ladislava	Neo Nectar
+Untainted Holy Damsel, Green Katrina	Neo Nectar
+White Lily Musketeer Captain, Cecilia	Neo Nectar
+Flower Princess of Candor, Lindroos Premier	Neo Nectar
+Entrancing Flower Princess, Sandrine	Neo Nectar
+Flower Princess of Cherry, Kosterina	Neo Nectar
+Bond Protector Musketeer, Antero	Neo Nectar
+Flower Princess of Dedication, Robertina	Neo Nectar
+Sacred Tree Dragon, Rain Breath Dragon	Neo Nectar
+Dragonic Kaiser Vermillion "THE BLOOD"	Narukami
+Brawler, Big Bang Knuckle Dragon	Narukami
+Brawler, Wildfist Dragon	Narukami
+Brawler, Big Bang Slash Dragon	Narukami
+Threatening Brawler, Kohmei	Narukami
+Tonfa Brawler, Arc	Narukami
+Brawler, Fighting Dracokid	Narukami
+Dragonic Kaiser Vermillion	Narukami
+Dragonic Deathscythe	Narukami
+Thunderstorm Dragoon	Narukami
+Rising Phoenix	Narukami
+Red River Dragoon	Narukami
+Spark Kid Dragoon	Narukami
+# cards without a clan icon that count as "only from <clan>" while the vanguard has only that clan (their own text says so): Name<TAB>~Clan
+Judgment Hades Dragon, Veagalldail	~Shadow Paladin
+Judgment Hades Dragon, Vegardile	~Shadow Paladin
+Stab Magician, Knilfade	~Pale Moon
+Stab Magician, Nilfade	~Pale Moon
+Undulate Assault	~Aqua Force
+Estuary Assault	~Aqua Force
+Dragritter, Khaleem	~Narukami
+Dragritter, Kareem	~Narukami
+Spark Spike Dragon	~Narukami
+Showered Applause Dragon	~Pale Moon
+Freezing Magic, Froros	~Genesis
+Platinamane Stallion	~Gold Paladin
+Demonic Dragon Nymph, Kasin	~Narukami
+Tear Knight, Eilikrinis	~Aqua Force
+Clear Magic, Viviney	~Genesis
+Knight of Restoration, Auguisans	~Royal Paladin
+Knight of Restoration, Auguisa	~Royal Paladin
+Brawler, Compete Dragon	~Narukami
+Brawler, Feisty Dragon	~Narukami
+Full-force Brawler, Gitsukou	~Narukami
+Exemplary Vigorous Brave Shooter	~Aqua Force
+Vigorous Brave Shooter	~Aqua Force
+Steam Fighter, Amber (JP)	Gear Chronicle
+Steam Battler, Dadasig (D Series)	Gear Chronicle
+Steam Maiden, Ulul (D Series)	Gear Chronicle
+Lucky Pot Dracokid (D Series)	Gear Chronicle
+# character icons of the Legend sets (official list: the clan cards of DZ-SS13 Aichi, DZ-SS14 Kai, DZ-BT15 Ren, DZ-SS15 Shinemon / Chrono): Name<TAB>@icon
+Dragonic Overlord	@kai
+Dragon Knight, Nehalem	@kai
+Embodiment of Armor, Bahr	@kai
+Lizard Soldier, Conroe	@kai
+Vortex Dragon	@kai
+Berserk Dragon	@kai
+Wyvern Strike, Tejas	@kai
+Dragon Monk, Gojo	@kai
+Wyvern Strike, Jarran	@kai
+Wyvern Guard, Barri	@kai
+Demonic Dragon Mage, Rakshasa	@kai
+Embodiment of Spear, Tahr	@kai
+Flame of Promise, Aermo	@kai
+Phantom Blaster Dragon	@ren
+Darkness Maiden, Macha	@ren
+Skull Witch, Nemain	@ren
+Blaster Dark	@ren
+Black Sage, Charon	@ren
+Dark Mage, Badhabh Caar	@ren
+Knight of Darkness, Rugos	@ren
+Dark Shield, Mac Lir	@ren
+Witch of Nostrum, Arianrhod	@ren
+Blaster Javelin	@ren
+Fullbau	@ren
+Grim Reaper	@ren
+Darkside Trumpeter	@ren
+Howl Owl	@ren
+Abyss Healer	@ren
+King of Knights, Alfred	@aichi
+Blaster Blade	@aichi
+Wingal	@aichi
+Barcgal	@aichi
+Soul Saver Dragon	@aichi
+Knight of Truth, Gordon	@aichi
+Knight of Silence, Gallatin	@aichi
+Little Sage, Marron	@aichi
+Lake Maiden, Lien	@aichi
+Flash Shield, Iseult	@aichi
+Bringer of Good Luck, Epona	@aichi
+Flogal	@aichi
+High Dog Breeder, Akane	@aichi
+Pongal	@aichi
+Gleaming Lord, Uranus	@shinemon
+Prometheus of Dancing Lights	@shinemon
+Atlas of Heavenly Sphere	@shinemon
+Pan of New Style	@shinemon
+Quaking Heavenly Dragon, Astraios Dragon	@shinemon
+Astraia of the Full Heavens	@shinemon
+Phosphoros of Auspicious Light	@shinemon
+Deputize Bear	@shinemon
+Giant Deity of Distant World, Valkerion	@shinemon
+Administrator of Hope, Pandora	@shinemon
+Battle Maiden, Kukurihime	@shinemon
+Cyber Tiger	@shinemon
+Talisman Angel	@shinemon
+Witch of Big Pots, Laurier	@shinemon
+Chronojet Dragon	@chrono
+Smokegear Dragon	@chrono
+Masergear Dragon	@chrono
+Chrono Dran	@chrono
+Chronodragon Nextage	@chrono
+Upstream Dragon	@chrono
+Interdimensional Dragon, Mystery-flare Dragon	@chrono
+Steam Fighter, Balih	@chrono
+Steam Fighter, Amber	@chrono
+Steam Scara, Gigi	@chrono
+Steam Breath Dragon	@chrono
+Steam Maiden, Arlim	@chrono
+Steam Battler, Dadasig	@chrono
+Stomach Clock Gear Rabbit	@chrono
+Luckypot Dracokid	@chrono
+Steam Maiden, Uluru	@chrono
+Steam Fighter, Amber (JP)	@chrono
+Steam Battler, Dadasig (D Series)	@chrono
+Steam Maiden, Ulul (D Series)	@chrono
+Lucky Pot Dracokid (D Series)	@chrono
+High Dog Breeder, Akane (JP)	@aichi
+Deputize Bear (JP)	@shinemon
+Pongal (JP)	@aichi
+Steam Fighter, Amber (JP)	@chrono

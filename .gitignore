@@ -1,0 +1,10 @@
+data/
+dist/
+shots/
+node_modules/
+app/electron/game/
+app/electron/dist/
+*.bak
+*.bak.*
+*.v[0-9]*.bak
+smoke.png

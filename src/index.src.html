@@ -1,0 +1,245 @@
+<title>Vanguard D Deck Lab</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" async></script>
+<style>
+/*__CSS__*/
+</style>
+<div id="app">
+<main id="lobby">
+  <canvas id="lbFx" aria-hidden="true"></canvas>
+  <div class="lb-shade" aria-hidden="true"></div>
+  <header class="lb-top">
+    <div class="lb-logo">
+      <div class="lb-emblem" aria-hidden="true"><i></i><i></i><i></i><b>D</b></div>
+      <div class="lb-title"><span class="lb-eyebrow">D Standard · โต๊ะทดสอบเด็ค</span><h1>Vanguard D <span>Deck Lab</span></h1></div>
+    </div>
+    <div class="lb-tools">
+      <span class="lb-stat" id="dbStat"></span>
+      <button type="button" class="lb-ico" id="sfxBtn" data-sfx-toggle aria-pressed="true" title="เสียงเมนูและเสียงในสนาม">♪ เสียง</button>
+    </div>
+  </header>
+  <div class="lb-hub">
+    <nav class="lb-menu" aria-label="เมนูหลัก">
+      <div class="lb-cap">MAIN MENU</div>
+      <div class="seg" id="modeSeg">
+        <button type="button" data-mode="solo" aria-pressed="true"><em>01</em><b>SOLO FIGHT</b><small>คุมสองฝั่ง — เล่นคนเดียว เห็นมือทั้งสองฝั่ง ย้อนกลับได้</small></button>
+        <button type="button" data-mode="bot" aria-pressed="false"><em>02</em><b>VS CPU</b><small>สู้กับบอท — ไรด์ คอล โจมตี การ์ด</small></button>
+        <button type="button" data-mode="online" aria-pressed="false"><em>03</em><b>LINK FIGHT</b><small>เล่นกับเพื่อนด้วยรหัสห้อง</small></button>
+      </div>
+      <div class="lb-cap">WORKSHOP</div>
+      <div class="lb-sub">
+        <button type="button" id="newDeckBtn"><em>04</em><b>MY DECKS</b><small>เด็คที่สร้างไว้ · แก้ไข · จัดเด็คใหม่</small></button>
+        <button type="button" id="navOpt" data-drawer="opt"><em>05</em><b>CARD ART</b><small>รูปการ์ด · หลังการ์ด</small></button>
+        <button type="button" id="navHelp" data-drawer="help"><em>06</em><b>HOW TO PLAY</b><small>สกิลออโต้ · ปุ่มทำเอง · ขอบเขต</small></button>
+      </div>
+    </nav>
+    <section class="lb-stage" aria-label="ตั้งค่าไฟท์">
+      <div class="lb-cap stagecap"><span id="stageMode">SOLO FIGHT</span><i>MATCH SETUP</i></div>
+      <div id="slots"></div>
+      <section class="lb-sec" id="firstSec">
+        <h2>ใครเริ่มก่อน</h2>
+        <div class="chips" id="firstChips">
+          <button type="button" data-first="rand" aria-pressed="true">สุ่ม</button>
+          <button type="button" data-first="0" aria-pressed="false">ฝั่งคุณ</button>
+          <button type="button" data-first="1" aria-pressed="false">อีกฝั่ง</button>
+        </div>
+      </section>
+      <section class="lb-sec" id="onlineSec" hidden>
+        <h2>ห้องออนไลน์</h2>
+        <div class="panel" id="roomPanel">
+          <div class="row"><button type="button" class="go" id="createBtn">สร้างห้อง</button><span class="note">หรือเข้าห้องของเพื่อน</span></div>
+          <div class="row"><input class="code-in" id="codeIn" maxlength="5" placeholder="รหัส" autocomplete="off" aria-label="รหัสห้อง"><button type="button" class="ghost" id="joinBtn">เข้าห้อง</button></div>
+          <div class="row"><button type="button" class="ghost strong" id="rejoinBtn" hidden>กลับเข้าห้องล่าสุด</button></div>
+          <div id="roomBox" hidden><p class="note">รหัสห้องของคุณ — ส่งให้เพื่อน</p><div class="roomcode" id="roomCode"></div></div>
+          <div class="status" id="onStatus" role="status"></div>
+          <p class="note">เพื่อนต้องมีบัญชี Claude และคุณต้อง<b>แชร์หน้านี้ให้เพื่อนด้วยอีเมล</b> (สิทธิ์ Viewer ก็เล่นได้ — ถ้าเป็น Viewer เกมจะวิ่งผ่านห้องสด ทั้งสองคนต้องเปิดหน้าไว้ระหว่างเล่น) · หลุดหรือรีโหลด กด <b>กลับเข้าห้องล่าสุด</b> เกมจะต่อจากเดิม</p>
+        </div>
+      </section>
+      <section class="lb-sec" id="p2pSec">
+        <div class="panel" id="p2pPanel" hidden>
+          <div class="ql" id="qlBox">
+            <h3 class="ql-h">ห้องด่วน — รหัส 6 ตัว</h3>
+            <p class="note">ทั้งสองคนเปิดเกมนี้ในเครื่องตัวเอง เลือกเด็คด้านบน แล้วคนหนึ่งกด <b>สร้างห้อง</b> ส่งรหัส 6 ตัวให้เพื่อน อีกคนพิมพ์รหัสแล้วกด <b>เข้าห้อง</b> — ไฟท์เริ่มเอง ทั้งสองฝั่งเห็นรูปการ์ด</p>
+            <div class="row"><button type="button" class="go" id="qlHost">สร้างห้อง</button><div class="qlcode" id="qlCode" hidden></div><button type="button" class="ghost strong" id="qlCopy" hidden>คัดลอกรหัส</button></div>
+            <div class="row"><input class="code-in" id="qlIn" maxlength="6" placeholder="รหัสห้อง" autocomplete="off" aria-label="รหัสห้องของเพื่อน"><button type="button" class="ghost strong" id="qlJoin">เข้าห้อง</button></div>
+          </div>
+          <details class="qlman"><summary>เชื่อมไม่ได้? ใช้วิธีแลกรหัสยาวผ่านแชต</summary>
+          <p class="note"><b>เล่นกับเพื่อนแบบเชื่อมตรง</b> — ทั้งสองคนเปิดไฟล์เกมนี้ในเครื่องของตัวเอง เลือกเด็คด้านบน แล้วแลกรหัสกัน 2 ครั้งผ่านแชต (LINE, Messenger ฯลฯ) ระหว่างเล่นส่งหากันแค่การเดิน รูปการ์ดของแต่ละคนโหลดในเครื่องตัวเอง</p>
+          <div class="chips" id="p2pRole"><button type="button" data-role="host" aria-pressed="true">ฉันสร้างห้อง</button><button type="button" data-role="guest" aria-pressed="false">ฉันเข้าห้องของเพื่อน</button></div>
+          <div id="p2pHost" class="p2pcol">
+            <div class="row"><b class="stepn">1</b><button type="button" class="go" id="p2pMake">สร้างรหัสห้อง</button></div>
+            <div id="p2pHost2" class="p2pcol" hidden>
+              <label class="note" for="p2pOffer">รหัสห้อง — คัดลอกส่งให้เพื่อน</label>
+              <textarea id="p2pOffer" class="codebox" rows="3" readonly spellcheck="false"></textarea>
+              <div class="row"><button type="button" class="ghost strong" id="p2pCopyO">คัดลอกรหัสห้อง</button></div>
+              <label class="note" for="p2pAnsIn"><b class="stepn">2</b> วางรหัสตอบกลับที่เพื่อนส่งมา</label>
+              <textarea id="p2pAnsIn" class="codebox" rows="3" spellcheck="false" placeholder="VG…"></textarea>
+              <div class="row"><button type="button" class="go" id="p2pConnect">เชื่อมต่อและเริ่มไฟท์</button></div>
+            </div>
+          </div>
+          <div id="p2pGuest" class="p2pcol" hidden>
+            <label class="note" for="p2pOfferIn"><b class="stepn">1</b> วางรหัสห้องที่เพื่อนส่งมา</label>
+            <textarea id="p2pOfferIn" class="codebox" rows="3" spellcheck="false" placeholder="VG…"></textarea>
+            <div class="row"><button type="button" class="go" id="p2pReply">สร้างรหัสตอบกลับ</button></div>
+            <div id="p2pGuest2" class="p2pcol" hidden>
+              <label class="note" for="p2pAns"><b class="stepn">2</b> รหัสตอบกลับ — คัดลอกส่งกลับไปให้เพื่อน แล้วรอ</label>
+              <textarea id="p2pAns" class="codebox" rows="3" readonly spellcheck="false"></textarea>
+              <div class="row"><button type="button" class="ghost strong" id="p2pCopyA">คัดลอกรหัสตอบกลับ</button></div>
+            </div>
+          </div>
+          <p class="note">รหัสใช้ได้ครั้งเดียว ถ้าหลุดหรือปิดหน้าต้องแลกรหัสใหม่ · บางเครือข่าย (เช่นเน็ตมือถือบางค่าย) ไม่ยอมให้เชื่อมตรง ถ้าเชื่อมไม่ติดให้ลองเปลี่ยนเป็น Wi-Fi</p>
+          </details>
+        </div>
+      </section>
+      <div class="row" id="goRow">
+        <button type="button" class="go big" id="goBtn"><span>STAND UP!</span><small>เริ่มไฟท์</small></button>
+        <button type="button" class="ghost" id="resumeBtn" hidden>เล่นต่อจากเกมล่าสุด</button>
+      </div>
+      <p class="note warnnote" id="goNote" role="status"></p>
+      <div class="lb-tip"><b>TIP</b><span id="lbTip"></span></div>
+    </section>
+  </div>
+  <p class="disc">เครื่องมือแฟนเมดสำหรับซ้อมส่วนตัว ไม่ได้เกี่ยวข้องกับหรือได้รับการรับรองจาก Bushiroad · โปรดตรวจข้อความจริงบนการ์ดก่อนซื้อ</p>
+  <div class="lb-drawer" id="drawer" hidden>
+    <div class="lb-dback" data-dclose="1"></div>
+    <aside class="lb-dbox" role="dialog" aria-modal="true" aria-labelledby="drawerT">
+      <header><h2 id="drawerT"></h2><button type="button" class="lb-ico" data-dclose="1" aria-label="ปิด">✕ ปิด</button></header>
+      <div class="lb-dbody" data-d="opt">
+        <section class="panel">
+        <h2 class="lb-eyebrow">รูปการ์ดของคุณ</h2>
+        <p class="note">หน้าการ์ดในเกมเป็นลายที่วาดขึ้นเอง ไม่ได้ฝังรูปการ์ดจริง (ลิขสิทธิ์ของ Bushiroad) ถ้ามีไฟล์รูปในเครื่อง เลือกไฟล์หรือเลือกทั้งโฟลเดอร์ได้ ระบบจับคู่จากชื่อไฟล์ เช่น <b>dzbt07_016.png</b> หรือชื่อการ์ด รูปอยู่ในเบราว์เซอร์เครื่องนี้เท่านั้น</p>
+        <div class="row"><label class="ghost strong" for="imgIn">เลือกไฟล์รูป</label><label class="ghost" for="imgDir">เลือกทั้งโฟลเดอร์</label><button type="button" class="ghost" id="imgClear" hidden>ลบรูปทั้งหมด</button></div>
+        <input type="file" id="imgIn" accept="image/*" multiple hidden><input type="file" id="imgDir" webkitdirectory multiple hidden>
+        <p class="note" id="imgStat" role="status"></p>
+        <div id="autoBox" hidden>
+          <p class="note"><b>ฉบับในเครื่อง — รูปขึ้นเองจากเว็บทางการ:</b> ไม่ต้องเตรียมรูปในเครื่อง เกมโหลดรูปของการ์ดแต่ละใบตามลำดับ ① เว็บรายการการ์ดทางการฝั่งญี่ปุ่น ② เว็บทางการฝั่งอังกฤษ (ต้องต่อเน็ต) ③ สำรอง: โฟลเดอร์ <b>cards</b> ข้างไฟล์เกม สำหรับใบที่เว็บไม่มี ④ ถ้าไม่เจอ ใช้หน้าการ์ดที่วาดแทน ไฟล์เกมเองไม่มีรูปอยู่ข้างใน</p>
+          <p class="note"><label><input type="checkbox" id="imgJp"> ใช้รูปจากเว็บทางการ<b>ญี่ปุ่น</b>เป็นหลัก (การ์ดภาษาญี่ปุ่น · เฉพาะชุดที่ตรวจแล้วว่ารหัสการ์ดตรงกับฝั่งอังกฤษ คือบูสเตอร์หลักและชุดพิเศษบางชุด ชุดอื่นและการ์ดโปรโมใช้รูปฝั่งอังกฤษ · ถ้ายังเจอใบที่รูปไม่ตรงกับชื่อการ์ด บอก Claude)</label></p>
+          <p class="note"><label><input type="checkbox" id="imgWeb"> ใช้รูปจากเว็บทางการ<b>อังกฤษ</b>เมื่อฝั่งญี่ปุ่นไม่มีใบนั้น</label></p>
+          <p class="note"><label for="imgBase">ที่อยู่โฟลเดอร์รูปบนเว็บทางการอังกฤษ (ถ้ารูปไม่ขึ้น: เปิดหน้าการ์ดทางการ คลิกขวาที่รูป → คัดลอกที่อยู่รูปภาพ แล้ววางตรงนี้)</label><br><input type="text" id="imgBase" class="txt" style="width:100%" spellcheck="false"></p>
+          <p class="note"><label for="backUrl">ที่อยู่รูปหลังการ์ด (ไม่บังคับ — วางที่อยู่รูปที่ต้องการ หรือใส่ไฟล์ชื่อ <b>back.png</b> ในโฟลเดอร์ cards ถ้าเว้นว่างจะใช้หลังการ์ดลายของเกม)</label><br><input type="text" id="backUrl" class="txt" style="width:100%" spellcheck="false" placeholder="https://…"></p>
+          <p class="note"><label><input type="checkbox" id="wikiOn"> แสดง<b>ข้อความการ์ดภาษาอังกฤษ</b>ในรายละเอียดการ์ด โดยโหลดสดจาก Cardfight!! Vanguard Wiki (ต้องต่อเน็ต · ไม่ได้เก็บไว้ในเกม)</label></p>
+          <div class="row"><button type="button" class="ghost" id="imgRetry">ลองหารูปใหม่</button></div>
+          <p class="note" id="autoStat" role="status"></p>
+        </div>
+        <p class="note">หลังการ์ด: นำเข้าไฟล์รูปที่ตั้งชื่อว่า <b>back</b> (เช่น back.png) เกมจะใช้เป็นหลังการ์ดทุกใบ</p>
+        <p class="note">อยากรู้ว่าเด็คหนึ่งต้องใช้รูปใบไหน ชื่อไฟล์อะไร: กด <b>ดูการ์ด</b> ที่เด็ค แล้วเปิดแท็บ <b>รูปการ์ด</b> จะมีลิงก์ไปหน้าการ์ดทางการทีละใบ</p>
+      </section>
+      </div>
+      <div class="lb-dbody" data-d="help">
+        <section class="panel">
+        <h2 class="lb-eyebrow">สกิลออโต้</h2>
+        <p class="note"><b>ออโต้</b> = สกิลที่เขียนและตรวจด้วยมือ · <b class="tagb">ออโต้ β</b> = สกิลที่ระบบอ่านจากข้อความการ์ดเอง เล่นได้เลยแต่ยังไม่ได้ตรวจทีละใบ · <b class="tags">กึ่งออโต้</b> = เกมรู้จังหวะของสกิล ตรวจเงื่อนไขที่อ่านออก และหักคอสต์ให้ แล้วหยุดรอให้คุณทำเอฟเฟกต์เองด้วย ✋ (บอทจะไม่ใช้สกิลแบบนี้) · <b class="tagp">ออโต้บางส่วน</b> = บางข้อของใบนั้นทำงานแล้ว ข้อที่เหลือต้องทำเอง · <b class="tagm">ยังไม่ออโต้</b> = ค่าพลัง ชิลด์ และไอคอนใช้ได้ ส่วนสกิลต้องทำเอง</p>
+        <p class="note"><b>อ่านการ์ด</b> — คลิกที่การ์ดเพื่อเปิดหน้าต่างอ่านสกิลแบบเต็ม · การ์ดที่คลิกแล้วเป็นการเล่น (เช่น การ์ดในมือที่คอลได้) ให้<b>คลิกขวา</b> หรือ<b>กดค้าง</b> หรือกดปุ่ม 🔍 ที่ลอยอยู่บนการ์ดที่เลือก · <b>เสียง</b> เปิด/ปิดได้ที่ปุ่ม ♪ หน้าแรกหรือปุ่ม "เสียง" มุมขวาบนของสนาม</p>
+        <p class="note"><b>✋ ทำเอง</b> — ทุกใบเล่นได้แม้สกิลยังไม่ออโต้: ระหว่างเมนเฟส แบทเทิลเฟส และตอนถูกโจมตี กดปุ่ม “✋ ทำเอง” เพื่อจั่ว ย้ายการ์ดข้ามโซน คอล/ไรด์จากเด็ค ปรับพลัง คริติคอล ฯลฯ ตามข้อความบนการ์ดด้วยมือ (บันทึกลงล็อกให้ทั้งสองฝั่งเห็น)</p>
+        <p class="note">การ์ดทั้งหมดอิง<b>รายการการ์ดญี่ปุ่น</b> (เลขและรูปตามเว็บทางการญี่ปุ่น) แสดง<b>ชื่อภาษาอังกฤษก่อน</b> ชื่อญี่ปุ่นอยู่บรรทัดรอง · ใบที่ยังไม่มีชื่ออังกฤษทางการใช้ชื่อแปลเอง (มีหมายเหตุในรายละเอียดการ์ด) · ใบที่ยังไม่ออโต้ครบมี<b>สรุปสกิล</b>ที่เขียนเองหรือลิงก์ไปอ่านข้อความเต็มที่เว็บทางการ/wiki · ใบที่ไม่มีในรายการภาษาอังกฤษ ระบบอ่านสกิลจากคำแปลใน wiki จะมีป้าย <b>ออโต้ β (จาก wiki)</b> ในรายละเอียดการ์ด — มีโอกาสคลาดเคลื่อนมากกว่าใบอื่น</p>
+        <p class="note">เจอใบที่ทำงานไม่ตรงกับการ์ดจริง หรืออยากให้เด็คไหนออโต้ครบ ส่งชื่อการ์ดหรือรหัสเด็คให้ Claude ในแชตได้</p>
+      </section>
+        <section class="panel">
+        <h2 class="lb-eyebrow">จัดเด็ค · Deck Log</h2>
+        <p class="note">กด <b>+ จัดเด็คใหม่</b> เพื่อเลือกการ์ดจากฐานข้อมูล D Standard ทุกเนชั่น หรือ <b>คัดลอกไปแก้</b> จากเด็คพร้อมเล่น เด็คที่บันทึกจะตามบัญชีของคุณไปทุกเครื่องและใช้ในห้องออนไลน์ได้</p>
+        <p class="note">หน้านี้ดึงข้อมูลจาก Deck Log เองไม่ได้ ส่ง<b>รหัสเด็ค</b> (เช่น 1MCW2) ให้ Claude ในแชต แล้วเด็คจะถูกเพิ่มให้</p>
+      </section>
+        <section class="panel">
+        <h2 class="lb-eyebrow">ขอบเขตตอนนี้</h2>
+        <p class="note">กติกาที่ทำงานอัตโนมัติ: ไรด์เด็ค เพอร์โซน่าไรด์ เอเนอร์จี ทริกเกอร์ทั้ง 5 แบบ เซนทิเนล อินเตอร์เซปต์ ออเดอร์ทั้ง 3 แบบ โทเคน ล็อก World, Divine Skill, White/Black Wings, มาร์กเกอร์บนเซอร์เคิล (เช่น Dragontree) และ <b>overDress / X-overDress</b> (คอลการ์ดที่มี overDress ทับยูนิทที่กำหนด เกมจะถามว่าจะ overDress หรือคอลทับปกติ ใบที่ถูกทับจะซ้อนอยู่ใต้ยูนิทเป็น originalDress) และ <b>Persona Shield ทิกเก็ต</b> (ได้จากสกิลการ์ด อยู่ในมือเท่านั้น เพลย์ในการ์ดสเต็ปแบบบลิตซ์ออเดอร์ ในเทิร์นตัวเองไม่ถูกเลือกทิ้ง) · กลไกเฉพาะชุดที่ยังไม่รองรับ: Stride / G zone, Arms, Prison, มาร์กเกอร์และเกจของชุดไตเติล — การ์ดกลุ่มนั้นเป็นกึ่งออโต้หรือทำเอง</p>
+        <p class="note">ออนไลน์เป็นห้องสำหรับเล่นกับเพื่อน ข้อมูลเกมของทั้งสองฝั่งอยู่ในเครื่องของผู้เล่นทั้งคู่ จึงไม่เหมาะกับการแข่งจริงจัง</p>
+      </section>
+        <p class="note">เครื่องมือแฟนเมดสำหรับซ้อมส่วนตัว ไม่ได้เกี่ยวข้องกับหรือได้รับการรับรองจาก Bushiroad ชื่อการ์ดและค่าพลังอ้างอิงจากรายการการ์ดทางการ คำอธิบายสกิลเป็นการสรุปความเป็นภาษาไทย โปรดตรวจข้อความจริงบนการ์ดก่อนซื้อ</p>
+      </div>
+    </aside>
+  </div>
+  <div id="lbIntro" aria-hidden="true"><div class="in"><i></i><b>Vanguard D <span>Deck Lab</span></b><em>STAND UP, VANGUARD</em></div></div>
+</main>
+
+<main id="builder" hidden>
+  <div class="bd-bg" aria-hidden="true"><i></i><i></i><i></i></div>
+  <header class="bd-head">
+    <button type="button" class="ghost" id="bdBack">← กลับ</button>
+    <div class="bd-title"><em>04</em><b>DECK EDIT</b></div>
+    <input id="bdName" class="bd-name" maxlength="40" placeholder="ชื่อเด็ค" aria-label="ชื่อเด็ค" autocomplete="off">
+    <span class="row nowrap"><button type="button" class="go sm" id="bdSave">บันทึก</button><button type="button" class="ghost" id="bdDelete">ลบเด็ค</button></span>
+  </header>
+  <div class="status" id="bdStatus" role="status"></div>
+  <div class="bd-tabs" id="bdTabs"><button type="button" data-tab="cards" aria-pressed="true">การ์ด</button><button type="button" data-tab="deck" aria-pressed="false">เด็คของฉัน</button></div>
+  <div class="bd-grid" id="bdGrid" data-tab="cards">
+    <section class="bd-cards" aria-label="ค้นหาการ์ด">
+      <div class="bd-filters">
+        <input id="bdQ" type="search" placeholder="ค้นหาชื่อหรือเลขการ์ด เช่น Artisaria หรือ DZ-BT07/016" aria-label="ค้นหาการ์ด" autocomplete="off">
+        <select id="bdNation" aria-label="เนชั่น"></select>
+        <div class="chips" id="bdGrade" role="group" aria-label="เกรด"></div>
+        <div class="chips" id="bdType" role="group" aria-label="ประเภท"></div>
+        <div class="chips" id="bdIcon" role="group" aria-label="ไอคอน"></div>
+        <label class="chk"><input type="checkbox" id="bdAuto"> เฉพาะสกิลออโต้แล้ว</label>
+      </div>
+      <div class="bd-h"><b>CARD LIBRARY</b><span class="bd-count" id="bdCount"></span><i>แตะรูปการ์ดเพื่ออ่านสกิล</i></div>
+      <div class="bd-list" id="bdList"></div>
+    </section>
+    <section class="bd-deck" aria-label="เด็คที่กำลังจัด">
+      <div class="bd-h"><b>MY DECK</b></div>
+      <div class="bd-sum" id="bdSum"></div>
+      <div class="bd-checks" id="bdChecks"></div>
+      <h3>RIDE DECK</h3>
+      <div id="bdRide"></div>
+      <h3>MAIN DECK</h3>
+      <div id="bdMain"></div>
+    </section>
+  </div>
+</main>
+
+<main id="mydecks" hidden>
+  <div class="bd-bg" aria-hidden="true"><i></i><i></i><i></i></div>
+  <header class="bd-head">
+    <button type="button" class="ghost" id="dkBack">← กลับ</button>
+    <div class="bd-title"><em>04</em><b>MY DECKS</b></div>
+    <span class="dk-count" id="dkCount"></span>
+    <input id="dkQ" type="search" class="dk-q" placeholder="ค้นหาชื่อเด็คหรือเนชั่น" aria-label="ค้นหาเด็ค" autocomplete="off">
+    <button type="button" class="go sm" id="dkNew">+ จัดเด็คใหม่</button>
+  </header>
+  <div class="status" id="dkStatus" role="status"></div>
+  <div class="dk-grid" id="dkGrid"></div>
+  <section class="dk-built"><h3>เริ่มจากเด็คพร้อมเล่น — กดเพื่อคัดลอกมาเป็นเด็คของคุณ</h3><div class="chips" id="dkBuilt"></div></section>
+</main>
+
+<section id="table" hidden>
+  <div id="wrap">
+    <div id="revealBar" hidden></div>
+    <div id="stage">
+      <div id="sky"><i class="rays"></i><i class="glow"></i><i class="smoke"></i><i class="stars"></i><i class="embers"></i><i class="horizon"></i><i class="bolt"></i><i class="vign"></i></div>
+      <div id="scene">
+        <div id="plane"><div id="zones"></div></div>
+        <div id="cards"></div>
+      </div>
+      <svg id="fx" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="tags"></div>
+      <div id="hud">
+        <aside id="side">
+          <div id="detail"><div class="empty">ชี้ที่การ์ดเพื่อดูย่อ · <b>คลิกการ์ด</b>เพื่อเปิดหน้าต่างอ่านสกิล (การ์ดที่กดแล้วเป็นการเล่น ให้<b>คลิกขวา</b>หรือ<b>กดค้าง</b>)</div></div>
+        </aside>
+        <div id="log"><h3>บันทึกเกม</h3></div>
+        <div id="plates"></div>
+        <div id="prompt"></div>
+        <div id="phase"></div>
+        <div id="menu">
+          <button type="button" class="btn" id="mUndo">ย้อนกลับ</button>
+          <button type="button" class="btn" id="mFlip">มุมมอง: ตามเทิร์น</button>
+          <button type="button" class="btn" id="mSpeed">ความเร็ว: ปกติ</button>
+          <button type="button" class="btn" id="mSfx" data-sfx-toggle data-sfx-label="1" aria-pressed="true">เสียง: เปิด</button>
+          <button type="button" class="btn" id="mExit">ออก</button>
+        </div>
+        <div id="swaps"></div>
+        <div id="soulb"></div>
+        <div id="clash" hidden></div>
+        <button type="button" id="peek" hidden>🔍 อ่านการ์ด</button>
+        <button type="button" id="cta" hidden></button>
+        <div id="cutin"></div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="modal" id="picker" hidden></div>
+<div class="modal" id="endov" hidden></div>
+<div class="modal" id="cardwin" hidden></div>
+</div>
+<script>
+/*__JS__*/
+</script>

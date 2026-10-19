@@ -1,0 +1,25 @@
+# Same-name cards printed again with new skills (icon start decks / remakes). The official lists join them under one name with the old wording.
+# Name<TAB>set prefix of the new printings (all of them move to the new row)<TAB>icon (- = none)<TAB>drop the icon from the old row (1/0)<TAB>stat changes as JSON {power, shield, grade}
+# The new row's skills: tools/hand-ast.txt "@Name [SET]<TAB>ast". Checked on the official English card pages, 2026-10-13.
+Dragonic Overlord	DZ-SS14	kai	1	{}
+Dragon Knight, Nehalem	DZ-SS14	kai	1	{}
+Berserk Dragon	DZ-SS14	kai	1	{}
+Dragon Monk, Gojo	DZ-SS14	kai	1	{}
+Embodiment of Armor, Bahr	DZ-SS14	kai	1	{}
+King of Knights, Alfred	DZ-SS13	aichi	1	{}
+Blaster Blade	DZ-SS13	aichi	1	{}
+Little Sage, Marron	DZ-SS13	aichi	1	{}
+Phantom Blaster Dragon	DZ-BT15	ren	1	{}
+Darkness Maiden, Macha	DZ-BT15	ren	1	{}
+Blaster Dark	DZ-BT15	ren	1	{}
+Black Sage, Charon	DZ-BT15	ren	1	{"power":10000}
+Blaster Javelin	DZ-BT15	ren	1	{}
+Skull Witch, Nemain	DZ-BT15	ren	1	{}
+Chronojet Dragon	DZ-SS15	chrono	0	{"power":13000}
+Steam Fighter, Balih	DZ-SS15	chrono	0	{}
+Smokegear Dragon	DZ-SS15	chrono	0	{}
+Upstream Dragon	DZ-SS15	chrono	0	{}
+Masergear Dragon	DZ-SS15	chrono	0	{}
+Steam Breath Dragon	DZ-SS15	chrono	0	{}
+Steam Scara, Gigi	DZ-SS15	chrono	0	{}
+Chronodragon Nextage	DZ-SS15	chrono	0	{}

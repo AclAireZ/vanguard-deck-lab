@@ -1,0 +1,21 @@
+name: Online room test (real internet)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+jobs:
+  quickroom:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Build the game
+        run: node build.mjs
+      - name: Install a browser for the test
+        run: |
+          mkdir -p /tmp/pw && cd /tmp/pw && npm init -y >/dev/null && npm install playwright@1.49.1
+          npx playwright install --with-deps chromium
+      - name: Two game windows meet through the real PeerJS service and play a whole game
+        run: CLOUD=1 PW=/tmp/pw/node_modules/playwright/index.mjs node test/quickroom.mjs
