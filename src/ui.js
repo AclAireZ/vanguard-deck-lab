@@ -231,7 +231,7 @@ function renderLobby() {
   { const R = VG.DB.jp ? VG.DB.rows.filter(r => r.jno) : VG.DB.rows; const full = R.filter(r => r.auto && !r.part).length, semi = R.filter(r => r.semi).length, part = R.filter(r => r.part && !r.semi).length; const n = x => x.toLocaleString('en-US'); const pc = x => ' (' + Math.round(x / VG.DB.count * 100) + '%)'; $('#dbStat').textContent = VG.DB.count ? (VG.DB.jp ? 'การ์ดชุดญี่ปุ่น ' : 'การ์ด ') + n(VG.DB.count) + ' ใบ · ออโต้ครบ ' + n(full) + pc(full) + ' · กึ่งออโต้ ' + n(semi) + pc(semi) + ' · ออโต้บางส่วน ' + n(part) + pc(part) : ''; }
   if (online && !LOCAL) Net.init().then(ok => { if (!ok) setStatus('โหมดออนไลน์ใช้ได้เมื่อเปิดหน้านี้ใน Claude ขณะลงชื่อเข้าใช้ และมีสิทธิ์แก้ไขหน้านี้', true); });
 }
-function myName() { const n = store.get('vg.name'); return typeof n === 'string' ? n.trim().slice(0, 16) : ''; }
+function myName() { if (typeof Acct !== 'undefined' && Acct.me && Acct.me.name) return Acct.me.name; const n = store.get('vg.name'); return typeof n === 'string' ? n.trim().slice(0, 16) : ''; }
 function setStatus(t, err) { const el = $('#onStatus'); el.textContent = t || ''; el.classList.toggle('err', !!err); }
 function officialLink(c, label) { return '<a href="' + (c.jno ? 'https://cf-vanguard.com/cardlist/?cardno=' + encodeURIComponent(c.jno).replace(/%2F/g, '/') : OFFICIAL + encodeURIComponent(c.official || c.no).replace(/%2F/g, '/')) + '" target="_blank" rel="noopener">' + label + ' ↗</a>'; }
 function cardNote(c) {
@@ -925,6 +925,7 @@ function exitTable() {
 }
 function showEnd() {
   const g = S.game; const o = g.over; const m = $('#endov');
+  try { Acct.record(g); } catch (e) { /* history is best effort */ }
   const why = o.reason === 'damage' ? 'ดาเมจครบ 6' : 'เด็คหมด';
   const solo = S.mode === 'solo'; const won = solo || o.winner === S.seat; const W = g.players[o.winner], Lz = g.players[1 - o.winner];
   m.innerHTML = '<div class="mbox ' + (won ? 'win' : 'lose') + '"><i class="rays" aria-hidden="true"></i><p class="end-eye">Fight result · turn ' + g.turnNo + '</p><h2 class="end-big">' + (solo ? 'FIGHT END' : won ? 'VICTORY' : 'DEFEAT') + '</h2>'
@@ -1539,6 +1540,7 @@ const QL = {
   advert() {
     if (!this.mq || this.role !== 'host' || !this.code) return;
     const show = !!($('#qlPub') && $('#qlPub').checked) && !this.rejoin && !this.everLinked; const d = VG.DECKS[S.decks[0]];
+    try { Presence.pub(); } catch (e) { /* no status */ }
     try { this.mq.publish(this.lobbyT(this.code), show ? JSON.stringify({ n: myName(), d: d ? d.name : '', t: Date.now(), v: 1 }) : '', { qos: 1, retain: true }); } catch (e) { /* offline */ }
   },
   drop() {
@@ -1648,6 +1650,245 @@ function p2pWire() {
 }
 function p2pReset() { P2P.close(); P2P.viaQL = false; QL.drop(); if ($('#qlCode')) { $('#qlCode').hidden = true; $('#qlCopy').hidden = true; } for (const id of ['#p2pOffer', '#p2pAnsIn', '#p2pOfferIn', '#p2pAns']) $(id).value = ''; $('#p2pHost2').hidden = true; $('#p2pGuest2').hidden = true; }
 
+/* ===== player accounts (game only): sign up / log in with e-mail + password on the owner's Supabase project =====
+   Keeps: profile (name, friend code), decks, match history, friends. Online status and room invites travel over the same MQTT broker as the room list. */
+const Acct = {
+  s: null, me: null, refreshing: null, tab: 'login', msg: '', err: false, view: null,
+  cfg() { const o = store.get('vg.sb'); if (o && typeof o === 'object' && /^https?:\/\//.test(o.url || '') && o.key) return o; return LOCAL && LOCAL.sb && LOCAL.sb.url && LOCAL.sb.key ? LOCAL.sb : null; },
+  on() { return !!this.cfg(); },
+  async req(path, opt) {
+    const c = this.cfg(); if (!c) throw new Error('ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์บัญชี'); opt = opt || {};
+    if (opt.auth !== false && this.s) await this.fresh();
+    const h = Object.assign({ apikey: c.key, 'Content-Type': 'application/json' }, opt.headers || {});
+    h.Authorization = 'Bearer ' + (opt.auth !== false && this.s ? this.s.access_token : c.key);
+    let r; try { r = await fetch(c.url.replace(/\/+$/, '') + path, { method: opt.method || 'GET', headers: h, body: opt.body !== undefined ? JSON.stringify(opt.body) : undefined }); }
+    catch (e) { const x = new Error('ต่อเซิร์ฟเวอร์บัญชีไม่ได้ — ตรวจอินเทอร์เน็ต'); x.net = true; throw x; }
+    const txt = await r.text(); let j = null; try { j = txt ? JSON.parse(txt) : null; } catch (e) { j = null; }
+    if (!r.ok) { const e = new Error(this.th(j, r.status)); e.status = r.status; throw e; }
+    return j;
+  },
+  /* server answers → Thai */
+  th(j, st) {
+    const c = String(j && (j.error_code || j.code || j.error) || ''), m = String(j && (j.msg || j.message || j.error_description) || '');
+    const k = (c + ' ' + m).toLowerCase();
+    if (/invalid_credentials|invalid login/.test(k)) return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+    if (/user_already_exists|already registered/.test(k)) return 'อีเมลนี้สมัครไว้แล้ว — กดเข้าสู่ระบบ';
+    if (/email_not_confirmed|not confirmed/.test(k)) return 'ยังไม่ได้ยืนยันอีเมล — เปิดลิงก์ในอีเมลก่อน แล้วเข้าสู่ระบบอีกครั้ง';
+    if (/weak_password|password should/.test(k)) return 'รหัสผ่านสั้นหรือง่ายเกินไป (อย่างน้อย 6 ตัว)';
+    if (/email_address_invalid|invalid.*email|unable to validate email/.test(k)) return 'รูปแบบอีเมลไม่ถูกต้อง';
+    if (/rate|too many|over_email_send_rate/.test(k) || st === 429) return 'ส่งคำขอถี่เกินไป รอสักครู่แล้วลองใหม่';
+    if (/otp_expired|token has expired|invalid.*otp|token.*invalid/.test(k)) return 'รหัสจากอีเมลไม่ถูกต้องหรือหมดอายุ — ขอรหัสใหม่';
+    if (/signup.*disabled|signups not allowed/.test(k)) return 'ตอนนี้ปิดรับสมัครอยู่';
+    if (/same_password|should be different/.test(k)) return 'รหัสผ่านใหม่ต้องไม่ซ้ำรหัสเดิม';
+    if (/duplicate key|23505/.test(k)) return 'มีข้อมูลนี้อยู่แล้ว';
+    return 'เซิร์ฟเวอร์ตอบกลับว่า: ' + (m || c || ('HTTP ' + st));
+  },
+  keep(s) { if (!s || !s.access_token) return; s.expires_at = s.expires_at || Math.floor(Date.now() / 1000) + (s.expires_in || 3600); this.s = { access_token: s.access_token, refresh_token: s.refresh_token, expires_at: s.expires_at, user: { id: s.user && s.user.id, email: s.user && s.user.email } }; store.set('vg.sess', this.s); },
+  fresh() {
+    if (!this.s || this.s.expires_at - 90 > Date.now() / 1000) return Promise.resolve();
+    if (!this.refreshing) this.refreshing = (async () => {
+      try { this.keep(await this.req('/auth/v1/token?grant_type=refresh_token', { method: 'POST', auth: false, body: { refresh_token: this.s.refresh_token } })); }
+      catch (e) { if (!e.net) this.clear(); }
+      finally { this.refreshing = null; }
+    })();
+    return this.refreshing;
+  },
+  async signup(email, pw, name) {
+    const r = await this.req('/auth/v1/signup', { method: 'POST', auth: false, body: { email, password: pw, data: { name } } });
+    if (r && r.access_token) { this.keep(r); await this.after(); return 'in'; }
+    try { await this.login(email, pw); return 'in'; } catch (e) { return 'confirm'; }   // e-mail confirmation is switched on in the project
+  },
+  async login(email, pw) { this.keep(await this.req('/auth/v1/token?grant_type=password', { method: 'POST', auth: false, body: { email, password: pw } })); await this.after(); },
+  async logout() { try { await this.req('/auth/v1/logout', { method: 'POST' }); } catch (e) { /* the local session goes anyway */ } this.clear(); },
+  clear() { this.s = null; this.me = null; store.set('vg.sess', null); Presence.stop(); Friends.list = []; Friends.reqs = []; this.view = null; acctUI(); },
+  async recover(email) { await this.req('/auth/v1/recover', { method: 'POST', auth: false, body: { email } }); },
+  async resetWith(email, token, pw) { this.keep(await this.req('/auth/v1/verify', { method: 'POST', auth: false, body: { type: 'recovery', email, token } })); await this.req('/auth/v1/user', { method: 'PUT', body: { password: pw } }); await this.after(); },
+  async after() {
+    const id = this.s && this.s.user.id; if (!id) return;
+    const p = await this.req('/rest/v1/profiles?select=id,name,tag&id=eq.' + id);
+    this.me = p && p[0] || { id, name: (this.s.user.email || '').split('@')[0].slice(0, 16), tag: '' };
+    store.set('vg.name', this.me.name); if ($('#qlName')) $('#qlName').value = this.me.name;
+    acctUI(); this.syncDecks(); Presence.start(); Friends.load().catch(() => {});
+  },
+  async boot() {
+    acctUI(); const s = store.get('vg.sess'); if (!this.on() || !s || !s.access_token) return;
+    this.s = s; acctUI();
+    try { await this.fresh(); if (this.s) await this.after(); } catch (e) { if (e.status === 401) this.clear(); }
+  },
+  async rename(n) { n = n.trim().slice(0, 16); if (!n) throw new Error('ใส่ชื่อก่อน'); await this.req('/rest/v1/profiles?id=eq.' + this.me.id, { method: 'PATCH', body: { name: n }, headers: { Prefer: 'return=minimal' } }); this.me.name = n; store.set('vg.name', n); if ($('#qlName')) $('#qlName').value = n; Presence.pub(); acctUI(); },
+  /* decks: newest copy wins, a removed deck stays removed */
+  async syncDecks() {
+    if (!this.s) return;
+    try {
+      const rows = await this.req('/rest/v1/decks?select=id,data,deleted,updated_at') || []; const seen = {};
+      for (const r of rows) {
+        seen[r.id] = r; const loc = My.decks[r.id]; const t = +r.updated_at || 0;
+        if (r.deleted) { if (loc && (loc.t || 0) <= t) { delete My.decks[r.id]; delete VG.DECKS[r.id]; } continue; }
+        if (!loc || (loc.t || 0) < t) { const d = VG.unpackDeck(r.id, r.data); if (d) { d.t = t; d.custom = true; d.synced = true; My.reg(d); } }
+      }
+      for (const id of Object.keys(My.decks)) { const r = seen[id]; if (!r || (My.decks[id].t || 0) > (+r.updated_at || 0)) await this.pushDeck(My.decks[id]); }
+      My.saveLocal(); if (!$('#lobby').hidden) renderLobby(); if (!$('#mydecks').hidden && window.VGBuilder && VGBuilder.Decks) VGBuilder.Decks.render && VGBuilder.Decks.render();
+    } catch (e) { /* decks stay on this computer */ }
+  },
+  async pushDeck(d) { if (!this.s || !d) return; try { await this.req('/rest/v1/decks?on_conflict=owner,id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: { owner: this.s.user.id, id: d.id, data: VG.packDeck(d), deleted: false, updated_at: d.t || Date.now() } }); d.synced = true; } catch (e) { /* next sync */ } },
+  async delDeck(id) { if (!this.s) return; try { await this.req('/rest/v1/decks?on_conflict=owner,id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: { owner: this.s.user.id, id, data: {}, deleted: true, updated_at: Date.now() } }); } catch (e) { /* next sync */ } },
+  /* match history */
+  record(g) {
+    if (!this.s || !g || !g.over || g.vgRec || !S.cfg) return; g.vgRec = true;
+    const seat = S.mode === 'solo' ? 0 : S.seat || 0; const o = g.over; const P = S.cfg.players || [];
+    const res = o.winner === seat ? 'win' : o.winner === 1 - seat ? 'loss' : 'draw';
+    const row = { owner: this.s.user.id, mode: S.mode === 'online' || S.mode === 'bot' ? S.mode : 'solo', my_deck: String(P[seat] && P[seat].deck && P[seat].deck.name || '').slice(0, 80), opp_name: String(P[1 - seat] && P[1 - seat].name || (S.mode === 'bot' ? 'CPU' : '')).slice(0, 40), opp_deck: String(P[1 - seat] && P[1 - seat].deck && P[1 - seat].deck.name || '').slice(0, 80), result: res, turns: g.turnNo || 0, reason: String(o.reason || '').slice(0, 40) };
+    this.req('/rest/v1/matches', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: row }).catch(() => {});
+  },
+  async matches() { return await this.req('/rest/v1/matches?select=played_at,mode,my_deck,opp_name,opp_deck,result,turns,reason&order=played_at.desc&limit=300') || []; },
+};
+const Friends = {
+  list: [], reqs: [],
+  async load() {
+    if (!Acct.s || !Acct.me) return; const me = Acct.me.id;
+    const rows = await Acct.req('/rest/v1/friends?select=owner,friend') || [];
+    const mine = rows.filter(r => r.owner === me).map(r => r.friend), them = rows.filter(r => r.friend === me).map(r => r.owner);
+    const ids = [...new Set(mine.concat(them))];
+    const profs = ids.length ? await Acct.req('/rest/v1/profiles?select=id,name,tag&id=in.(' + ids.join(',') + ')') || [] : [];
+    const P = {}; for (const p of profs) P[p.id] = p;
+    this.list = mine.filter(i => P[i]).map(i => Object.assign({ mutual: them.includes(i) }, P[i])).sort((a, b) => a.name.localeCompare(b.name));
+    this.reqs = them.filter(i => !mine.includes(i) && P[i]).map(i => P[i]);
+    Presence.watch(this.list.map(f => f.id)); acctDraw();
+  },
+  async add(tag) {
+    tag = String(tag || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); if (tag.length !== 6) throw new Error('รหัสเพื่อนมี 6 ตัว');
+    if (Acct.me && tag === Acct.me.tag) throw new Error('นี่คือรหัสของคุณเอง');
+    const p = await Acct.req('/rest/v1/profiles?select=id,name,tag&tag=eq.' + tag); if (!p || !p[0]) throw new Error('ไม่พบผู้เล่นรหัส ' + tag);
+    await Acct.req('/rest/v1/friends', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: { owner: Acct.me.id, friend: p[0].id } });
+    await this.load(); return p[0];
+  },
+  async addId(id) { await Acct.req('/rest/v1/friends', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: { owner: Acct.me.id, friend: id } }); await this.load(); },
+  async remove(id) { await Acct.req('/rest/v1/friends?owner=eq.' + Acct.me.id + '&friend=eq.' + id, { method: 'DELETE' }); await this.load(); },
+};
+/* online status of friends + room invites (MQTT, retained status per player cleared by the broker when the game closes) */
+const Presence = {
+  c: null, st: {}, watching: [], beat: 0, busy: false,
+  async start() {
+    if (this.c || this.busy || !window.mqtt || !Acct.me) return; this.busy = true; const me = Acct.me.id;
+    try { this.c = await MQ.conn({ topic: MQP + 'u/' + me, payload: '', qos: 1, retain: true }); } catch (e) { this.busy = false; return; }
+    this.busy = false; if (!Acct.me || Acct.me.id !== me) { try { this.c.end(true); } catch (e) { /* gone */ } this.c = null; return; }
+    const c = this.c; c.on('connect', () => { this.subAll(); this.pub(); }); c.on('message', (t, b) => this.msg(t, b));
+    this.subAll(); this.pub(); this.beat = setInterval(() => this.pub(), 60000);
+  },
+  stop() { clearInterval(this.beat); const c = this.c; this.c = null; this.st = {}; this.watching = []; if (c) { try { if (c.vgMe) c.publish(MQP + 'u/' + c.vgMe, '', { qos: 1, retain: true }); } catch (e) { /* offline */ } setTimeout(() => { try { c.end(); } catch (e) { /* gone */ } }, 300); } },
+  subAll() { if (!this.c || !Acct.me) return; this.c.vgMe = Acct.me.id; this.c.subscribe(MQP + 'inv/' + Acct.me.id, { qos: 1 }); for (const id of this.watching) this.c.subscribe(MQP + 'u/' + id, { qos: 0 }); },
+  watch(ids) { if (this.c) for (const id of this.watching) if (!ids.includes(id)) { this.c.unsubscribe(MQP + 'u/' + id); delete this.st[id]; } this.watching = ids.slice(); this.subAll(); },
+  pub() {
+    if (!this.c || !Acct.me) return;
+    const room = QL.role === 'host' && QL.code && !QL.everLinked ? QL.code : '';
+    try { this.c.publish(MQP + 'u/' + Acct.me.id, JSON.stringify({ n: Acct.me.name, t: Date.now(), room, play: !!(Net.started && !$('#table').hidden) }), { qos: 1, retain: true }); } catch (e) { /* offline */ }
+  },
+  msg(t, buf) {
+    let o = null; try { o = buf.length ? JSON.parse(String(buf)) : null; } catch (e) { o = null; }
+    if (t.startsWith(MQP + 'u/')) { const id = t.slice((MQP + 'u/').length); if (!o) delete this.st[id]; else this.st[id] = { n: String(o.n || ''), t: +o.t || 0, room: /^[A-Z2-9]{6}$/.test(o.room || '') ? o.room : '', play: !!o.play, seen: Date.now() }; acctDraw(); return; }
+    if (Acct.me && t === MQP + 'inv/' + Acct.me.id && o && typeof o.code === 'string' && /^[A-Z2-9]{6}$/.test(o.code)) {
+      if (!Friends.list.concat(Friends.reqs).some(f => f.id === o.from)) return;   // only from people on your list
+      showInvite(String(o.n || 'เพื่อน').slice(0, 16), o.code);
+    }
+  },
+  online(id) { const s = this.st[id]; return s && Date.now() - s.seen < 5 * 60e3 && Math.abs(Date.now() - s.t) < 15 * 60e3 ? s : null; },
+  invite(id) { if (!this.c || !Acct.me || QL.role !== 'host' || !QL.code) return false; this.c.publish(MQP + 'inv/' + id, JSON.stringify({ from: Acct.me.id, n: Acct.me.name, code: QL.code, t: Date.now() }), { qos: 1 }); return true; },
+};
+function showInvite(name, code) {
+  const box = $('#invToast'); if (!box) return;
+  const inGame = !$('#table').hidden;
+  box.innerHTML = '<b>' + esc(name) + '</b> ชวนคุณเข้าห้อง <code>' + code + '</code>' + (inGame ? '<span class="note">จบไฟท์นี้ก่อนแล้วกดเข้าห้องจากรายชื่อเพื่อน</span>' : '<button type="button" class="go" data-inv="' + code + '">เข้าห้อง</button>') + '<button type="button" class="ghost" data-inv="">ไม่ใช่ตอนนี้</button>';
+  box.hidden = false; try { Sfx.pick(); } catch (e) { /* no sound */ } clearTimeout(showInvite.t); showInvite.t = setTimeout(() => { box.hidden = true; }, 60000);
+}
+function goOnline() { if (!$('#builder').hidden || !$('#mydecks').hidden) { $('#builder').hidden = true; $('#mydecks').hidden = true; $('#lobby').hidden = false; } S.mode = 'online'; renderLobby(); for (const b of document.querySelectorAll('#modeSeg [data-mode]')) b.setAttribute('aria-pressed', String(b.dataset.mode === 'online')); }
+/* ---- the account window ---- */
+function acctUI() {
+  const b = $('#acctBtn'); if (!b) return;
+  b.hidden = !LOCAL;
+  b.innerHTML = Acct.s ? '<i class="dot"></i>' + esc(Acct.me ? Acct.me.name : 'บัญชี') : 'เข้าสู่ระบบ / สมัคร';
+  b.classList.toggle('in', !!Acct.s);
+  acctDraw();
+}
+function acctOpen(tab) { Acct.tab = tab || (Acct.s ? 'profile' : 'login'); Acct.msg = ''; $('#acct').hidden = false; acctDraw(); if (Acct.tab === 'stats') acctStats(); if (Acct.s && Acct.tab === 'friends') Friends.load().catch(e => acctSay(e.message, true)); const f = $('#acct input'); if (f) f.focus(); }
+function acctSay(t, err) { Acct.msg = t; Acct.err = !!err; const m = $('#acctMsg'); if (m) { m.textContent = t; m.classList.toggle('err', !!err); } }
+function acctDraw() {
+  const m = $('#acct'); if (!m || m.hidden) return;
+  const tabs = Acct.s ? [['profile', 'โปรไฟล์'], ['stats', 'สถิติ'], ['friends', 'เพื่อน' + (Friends.reqs.length ? ' (' + Friends.reqs.length + ')' : '')]] : [['login', 'เข้าสู่ระบบ'], ['signup', 'สมัครสมาชิก'], ['forgot', 'ลืมรหัสผ่าน']];
+  if (!tabs.some(t => t[0] === Acct.tab)) Acct.tab = tabs[0][0];
+  let body = '';
+  if (!Acct.on()) body = '<p class="note">ระบบบัญชียังไม่ได้เชื่อมกับเซิร์ฟเวอร์ — เจ้าของเกมต้องตั้งค่า Supabase ก่อน ตอนนี้เล่นได้ทุกโหมดโดยไม่ต้องมีบัญชี</p>';
+  else if (Acct.tab === 'login') body = '<form class="acf" data-af="login"><label>อีเมล<input name="email" type="email" autocomplete="email" required></label><label>รหัสผ่าน<input name="pw" type="password" autocomplete="current-password" required minlength="6"></label><button class="go" type="submit">เข้าสู่ระบบ</button></form><p class="note">ยังไม่มีบัญชี? กดแท็บ <b>สมัครสมาชิก</b> · ไม่มีบัญชีก็เล่นได้ทุกโหมด บัญชีใช้เก็บเด็ค สถิติ และรายชื่อเพื่อน</p>';
+  else if (Acct.tab === 'signup') body = '<form class="acf" data-af="signup"><label>ชื่อในเกม<input name="name" maxlength="16" required autocomplete="nickname"></label><label>อีเมล<input name="email" type="email" autocomplete="email" required></label><label>รหัสผ่าน (อย่างน้อย 6 ตัว)<input name="pw" type="password" autocomplete="new-password" required minlength="6"></label><label>ยืนยันรหัสผ่าน<input name="pw2" type="password" autocomplete="new-password" required minlength="6"></label><button class="go" type="submit">สมัครสมาชิก</button></form><p class="note">เด็คที่จัดไว้ในเครื่องนี้จะถูกเก็บเข้าบัญชีให้เองหลังสมัคร</p>';
+  else if (Acct.tab === 'forgot') body = '<form class="acf" data-af="forgot"><label>อีเมลที่ใช้สมัคร<input name="email" type="email" autocomplete="email" required></label><button class="ghost strong" type="submit">ส่งรหัสรีเซ็ตไปที่อีเมล</button></form><form class="acf" data-af="reset"><label>รหัสจากอีเมล<input name="token" inputmode="numeric" autocomplete="one-time-code" required></label><label>รหัสผ่านใหม่<input name="pw" type="password" autocomplete="new-password" required minlength="6"></label><button class="go" type="submit">ตั้งรหัสผ่านใหม่</button></form>';
+  else if (Acct.tab === 'profile') {
+    const me = Acct.me || {};
+    body = '<div class="acme"><div class="acav">' + esc((me.name || '?').slice(0, 1).toUpperCase()) + '</div><div><b class="acn">' + esc(me.name || '') + '</b><div class="note">' + esc(Acct.s.user.email || '') + '</div></div></div>'
+      + '<div class="actag"><span class="note">รหัสเพื่อนของคุณ — ให้เพื่อนใส่รหัสนี้เพื่อเพิ่มคุณ</span><div class="row"><code id="acTag">' + esc(me.tag || '—') + '</code><button type="button" class="ghost strong" data-act="copytag">คัดลอก</button></div></div>'
+      + '<form class="acf" data-af="rename"><label>เปลี่ยนชื่อในเกม<input name="name" maxlength="16" value="' + esc(me.name || '') + '" required></label><button class="ghost strong" type="submit">บันทึกชื่อ</button></form>'
+      + '<div class="row"><button type="button" class="ghost" data-act="sync">ซิงก์เด็คตอนนี้</button><button type="button" class="ghost" data-act="logout">ออกจากระบบ</button></div>';
+  } else if (Acct.tab === 'stats') body = '<div id="acStats"><p class="note">กำลังโหลด…</p></div>';
+  else if (Acct.tab === 'friends') {
+    const row = f => { const on = Presence.online(f.id); const st = on ? (on.play ? 'กำลังเล่น' : on.room ? 'เปิดห้อง ' + on.room : 'ออนไลน์') : 'ออฟไลน์';
+      const acts = (on && on.room ? '<button type="button" class="go sm" data-fjoin="' + on.room + '">เข้าห้อง</button>' : '') + (on && !on.play ? '<button type="button" class="ghost strong sm" data-finv="' + f.id + '">ชวนเข้าห้อง</button>' : '') + '<button type="button" class="ghost sm" data-fdel="' + f.id + '" title="ลบเพื่อน">ลบ</button>';
+      return '<div class="acfr' + (on ? ' on' : '') + '"><i class="dot"></i><div class="acfr-t"><b>' + esc(f.name) + '</b><span>' + st + (f.mutual ? '' : ' · รอเขาเพิ่มคุณกลับ') + '</span></div><div class="acfr-a">' + acts + '</div></div>'; };
+    body = '<form class="acf inline" data-af="addfriend"><label>เพิ่มเพื่อนด้วยรหัส 6 ตัว<input name="tag" maxlength="6" autocomplete="off" required></label><button class="go" type="submit">เพิ่มเพื่อน</button></form>'
+      + (Friends.reqs.length ? '<h4 class="ach">คนที่เพิ่มคุณเป็นเพื่อน</h4>' + Friends.reqs.map(f => '<div class="acfr"><i class="dot"></i><div class="acfr-t"><b>' + esc(f.name) + '</b><span>' + esc(f.tag) + '</span></div><div class="acfr-a"><button type="button" class="go sm" data-fadd="' + f.id + '">เพิ่มกลับ</button></div></div>').join('') : '')
+      + '<h4 class="ach">เพื่อนของคุณ (' + Friends.list.length + ')</h4>' + (Friends.list.length ? Friends.list.map(row).join('') : '<p class="note">ยังไม่มีเพื่อน — ส่งรหัสเพื่อนในแท็บโปรไฟล์ให้เพื่อน หรือใส่รหัสของเพื่อนด้านบน</p>')
+      + '<p class="note">กด <b>ชวนเข้าห้อง</b> เกมจะสร้างห้องให้แล้วส่งคำชวนไปที่เกมของเพื่อน (เพื่อนต้องเปิดเกมและเข้าสู่ระบบอยู่)</p>';
+  }
+  m.innerHTML = '<div class="mbox acbox" role="dialog" aria-modal="true" aria-label="บัญชีผู้เล่น"><div class="achead"><h2>บัญชีผู้เล่น</h2><button type="button" class="ghost" data-close="1">ปิด</button></div>'
+    + (Acct.on() ? '<div class="mtabs">' + tabs.map(t => '<button type="button" data-atab="' + t[0] + '" aria-pressed="' + (t[0] === Acct.tab) + '">' + t[1] + '</button>').join('') + '</div>' : '')
+    + '<div class="mscroll acbody">' + body + '</div><div class="status' + (Acct.err ? ' err' : '') + '" id="acctMsg" role="status">' + esc(Acct.msg || '') + '</div></div>';
+}
+async function acctStats() {
+  const el = () => $('#acStats');
+  try {
+    const ms = await Acct.matches(); if (!el()) return;
+    const tot = r => ({ w: r.filter(x => x.result === 'win').length, l: r.filter(x => x.result === 'loss').length, d: r.filter(x => x.result === 'draw').length, n: r.length });
+    const pct = t => t.n ? Math.round(t.w / t.n * 100) + '%' : '—';
+    const modes = [['online', 'ออนไลน์'], ['bot', 'VS CPU'], ['solo', 'SOLO']].map(([k, lb]) => { const t = tot(ms.filter(x => x.mode === k)); return '<div class="acst"><span>' + lb + '</span><b>' + t.w + '–' + t.l + (t.d ? '–' + t.d : '') + '</b><small>ชนะ ' + pct(t) + ' · ' + t.n + ' เกม</small></div>'; }).join('');
+    const by = {}; for (const x of ms) if (x.mode !== 'solo') (by[x.my_deck || '-'] = by[x.my_deck || '-'] || []).push(x);
+    const decks = Object.keys(by).map(k => [k, tot(by[k])]).sort((a, b) => b[1].n - a[1].n).slice(0, 12);
+    const RES = { win: 'ชนะ', loss: 'แพ้', draw: 'เสมอ' }, MODE = { online: 'ออนไลน์', bot: 'CPU', solo: 'SOLO' };
+    el().innerHTML = '<div class="acsts">' + modes + '</div>'
+      + (decks.length ? '<h4 class="ach">ผลตามเด็ค (ออนไลน์ + CPU)</h4><table class="actb"><thead><tr><th>เด็ค</th><th>ชนะ</th><th>แพ้</th><th>อัตราชนะ</th></tr></thead><tbody>' + decks.map(([k, t]) => '<tr><td>' + esc(k) + '</td><td>' + t.w + '</td><td>' + t.l + '</td><td>' + pct(t) + '</td></tr>').join('') + '</tbody></table>' : '')
+      + '<h4 class="ach">เกมล่าสุด</h4>' + (ms.length ? '<table class="actb"><thead><tr><th>เมื่อ</th><th>โหมด</th><th>เด็คคุณ</th><th>คู่แข่ง</th><th>ผล</th><th>เทิร์น</th></tr></thead><tbody>' + ms.slice(0, 40).map(x => '<tr class="r-' + x.result + '"><td>' + new Date(x.played_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) + '</td><td>' + (MODE[x.mode] || x.mode) + '</td><td>' + esc(x.my_deck || '') + '</td><td>' + esc((x.opp_name || '') + (x.opp_deck ? ' · ' + x.opp_deck : '')) + '</td><td><b>' + (RES[x.result] || x.result) + '</b></td><td>' + (x.turns || '') + '</td></tr>').join('') + '</tbody></table>' : '<p class="note">ยังไม่มีเกมที่บันทึก — เล่นจบไฟท์ขณะเข้าสู่ระบบอยู่ ผลจะถูกบันทึกให้เอง</p>');
+  } catch (e) { if (el()) el().innerHTML = '<p class="note err">' + esc(e.message) + '</p>'; }
+}
+function acctWire() {
+  const m = $('#acct');
+  $('#acctBtn').addEventListener('click', () => acctOpen());
+  m.addEventListener('click', async e => {
+    if (e.target === m || e.target.closest('[data-close]')) { m.hidden = true; m.innerHTML = ''; return; }
+    const t = e.target.closest('[data-atab]'); if (t) { Acct.tab = t.dataset.atab; Acct.msg = ''; acctDraw(); if (Acct.tab === 'stats') acctStats(); if (Acct.tab === 'friends') Friends.load().catch(x => acctSay(x.message, true)); return; }
+    const a = e.target.closest('[data-act]');
+    if (a && a.dataset.act === 'logout') { await Acct.logout(); acctOpen('login'); acctSay('ออกจากระบบแล้ว'); return; }
+    if (a && a.dataset.act === 'sync') { acctSay('กำลังซิงก์เด็ค…'); await Acct.syncDecks(); acctSay('ซิงก์เด็คแล้ว (' + Object.keys(My.decks).length + ' เด็ค)'); return; }
+    if (a && a.dataset.act === 'copytag') { const tg = Acct.me && Acct.me.tag || ''; try { await navigator.clipboard.writeText(tg); } catch (x) { /* select instead */ } acctSay('คัดลอกรหัสเพื่อน ' + tg + ' แล้ว'); return; }
+    const fj = e.target.closest('[data-fjoin]'); if (fj) { m.hidden = true; goOnline(); QL.join(fj.dataset.fjoin); return; }
+    const fi = e.target.closest('[data-finv]'); if (fi) { const id = fi.dataset.finv; fi.disabled = true;
+      if (!(QL.role === 'host' && QL.code && !QL.everLinked)) { goOnline(); QL.host(); }
+      const t0 = Date.now(); const go = () => { if (Presence.invite(id)) { acctSay('ส่งคำชวนแล้ว — รอเพื่อนกดเข้าห้อง ' + QL.code); fi.disabled = false; return; } if (Date.now() - t0 < 20000) setTimeout(go, 500); else { acctSay('ส่งคำชวนไม่ได้ — ต่อบริการห้องไม่ได้', true); fi.disabled = false; } }; go(); return; }
+    const fd = e.target.closest('[data-fdel]'); if (fd) { try { await Friends.remove(fd.dataset.fdel); acctSay('ลบเพื่อนแล้ว'); } catch (x) { acctSay(x.message, true); } return; }
+    const fa = e.target.closest('[data-fadd]'); if (fa) { try { await Friends.addId(fa.dataset.fadd); acctSay('เพิ่มเพื่อนแล้ว'); } catch (x) { acctSay(x.message, true); } return; }
+  });
+  m.addEventListener('submit', async e => {
+    e.preventDefault(); const f = e.target; const v = n => (f.elements[n] ? f.elements[n].value : '').trim(); const btn = f.querySelector('button[type="submit"]'); if (btn) btn.disabled = true;
+    try {
+      const k = f.dataset.af;
+      if (k === 'login') { acctSay('กำลังเข้าสู่ระบบ…'); await Acct.login(v('email'), f.elements.pw.value); Acct.tab = 'profile'; acctSay('เข้าสู่ระบบแล้ว ยินดีต้อนรับ ' + (Acct.me ? Acct.me.name : '')); }
+      else if (k === 'signup') { if (f.elements.pw.value !== f.elements.pw2.value) throw new Error('ยืนยันรหัสผ่านไม่ตรงกัน'); if (!v('name')) throw new Error('ใส่ชื่อในเกมก่อน'); acctSay('กำลังสมัคร…'); const r = await Acct.signup(v('email'), f.elements.pw.value, v('name').slice(0, 16)); if (r === 'in') { Acct.tab = 'profile'; acctSay('สมัครสำเร็จ เข้าสู่ระบบแล้ว'); } else { Acct.tab = 'login'; acctSay('สมัครแล้ว — เปิดลิงก์ยืนยันในอีเมล แล้วกลับมาเข้าสู่ระบบ'); } }
+      else if (k === 'forgot') { Acct.resetEmail = v('email'); await Acct.recover(v('email')); acctSay('ส่งรหัสไปที่ ' + v('email') + ' แล้ว — ใส่รหัสด้านล่างพร้อมรหัสผ่านใหม่'); if (btn) btn.disabled = false; return; }
+      else if (k === 'reset') { const em = Acct.resetEmail || (m.querySelector('[data-af="forgot"] [name="email"]') || {}).value || ''; if (!em) throw new Error('ใส่อีเมลแล้วกดส่งรหัสก่อน'); await Acct.resetWith(em.trim(), v('token'), f.elements.pw.value); Acct.tab = 'profile'; acctSay('ตั้งรหัสผ่านใหม่แล้ว และเข้าสู่ระบบแล้ว'); }
+      else if (k === 'rename') { await Acct.rename(v('name')); acctSay('บันทึกชื่อแล้ว'); }
+      else if (k === 'addfriend') { const p = await Friends.add(v('tag')); acctSay('เพิ่ม ' + p.name + ' เป็นเพื่อนแล้ว'); }
+      acctDraw(); if (Acct.tab === 'stats') acctStats();
+    } catch (x) { acctSay(x.message, true); }
+    if (btn && btn.isConnected) btn.disabled = false;
+  });
+  $('#invToast').addEventListener('click', e => { const b = e.target.closest('[data-inv]'); if (!b) return; $('#invToast').hidden = true; if (b.dataset.inv) { goOnline(); QL.join(b.dataset.inv); } });
+}
+
 /* ================= my decks (this browser + the signed-in account) ================= */
 const My = {
   decks: {},
@@ -1673,8 +1914,8 @@ const My = {
     } catch (e) { /* stays local */ }
   },
   async push(id) { if (!Net.ready || !Net.deckDb) return; try { await this.col().doc('deck-' + id).set(VG.packDeck(this.decks[id])); this.decks[id].synced = true; this.saveLocal(); } catch (e) { /* stays local */ } },
-  save(d) { d.t = Date.now(); d.custom = true; d.source = 'เด็คของฉัน'; d.nation = VG.deckNation(d); d.synced = false; this.reg(d); this.saveLocal(); this.push(d.id); },
-  remove(id) { delete this.decks[id]; delete VG.DECKS[id]; this.saveLocal(); if (Net.ready && Net.deckDb) this.col().doc('deck-' + id).set({ deleted: true, t: Date.now() }).catch(() => {}); },
+  save(d) { d.t = Date.now(); d.custom = true; d.source = 'เด็คของฉัน'; d.nation = VG.deckNation(d); d.synced = false; this.reg(d); this.saveLocal(); this.push(d.id); Acct.pushDeck(d); },
+  remove(id) { delete this.decks[id]; delete VG.DECKS[id]; this.saveLocal(); Acct.delDeck(id); if (Net.ready && Net.deckDb) this.col().doc('deck-' + id).set({ deleted: true, t: Date.now() }).catch(() => {}); },
 };
 
 /* ================= title screen extras: living backdrop, side sheets, menu sounds, opening ================= */
@@ -1922,7 +2163,7 @@ function boot() {
   const dk = store.get('vg.decks'); if (Array.isArray(dk) && VG.DECKS[dk[0]] && VG.DECKS[dk[1]]) S.decks = dk;
   if (LOCAL) {   // the copy on the owner's disk: no online rooms; automatic card pictures
     { const ob = $('#modeSeg [data-mode="online"]'); if (ob) ob.querySelector('small').textContent = 'เชื่อมตรงกับเครื่องเพื่อน ด้วยรหัสห้อง 6 ตัว'; }
-    document.documentElement.classList.add('vg-local');
+    document.documentElement.classList.add('vg-local'); acctWire(); Acct.boot();
     $('#roomPanel').hidden = true; $('#p2pPanel').hidden = false; $('#p2pPanel').appendChild($('#onStatus')); p2pWire();
     $('#autoBox').hidden = false; $('#imgBase').value = imgBase(); $('#imgWeb').checked = webOn(); $('#imgJp').checked = jpOn();
     $('#imgJp').addEventListener('change', e => { store.set('vg.imgJp', e.target.checked); autoReset(); });
@@ -1935,6 +2176,6 @@ function boot() {
   wire(); renderLobby(); loadImages();
   My.sync();
 }
-window.VGUI = { S, Net, My, P2P, QL, Rooms, MQ, newLocal, submit, undo, renderLobby, store, esc, statLine, fmtText, cardNote, staticCard, tagOf, imgFor, $, openCard, closeCard, CW, Sfx };
+window.VGUI = { S, Net, My, P2P, QL, Rooms, MQ, Acct, Friends, Presence, acctOpen, newLocal, submit, undo, renderLobby, store, esc, statLine, fmtText, cardNote, staticCard, tagOf, imgFor, $, openCard, closeCard, CW, Sfx };
 boot();
 })();
