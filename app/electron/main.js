@@ -11,7 +11,7 @@ app.userAgentFallback = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/5
    The page asks the official sites as before; those requests are redirected to vgcache://, which answers from disk, or fetches once from the site and keeps the file.
    Pictures that a site does not have are remembered for a week, so the game does not ask again and again. Nothing is shared with anyone. */
 protocol.registerSchemesAsPrivileged([{ scheme: 'vgcache', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } }]);
-const CACHE_HOSTS = ['https://cf-vanguard.com/wordpress/wp-content/images/', 'https://en.cf-vanguard.com/wordpress/wp-content/images/'].concat((process.env.VG_CACHE_HOSTS || '').split(',').filter(Boolean));
+const CACHE_HOSTS = ['https://cf-vanguard.com/wordpress/wp-content/', 'https://en.cf-vanguard.com/wordpress/wp-content/'].concat((process.env.VG_CACHE_HOSTS || '').split(',').filter(Boolean));
 function setupCache() {
   const dir = path.join(app.getPath('userData'), 'cardcache'); fs.mkdirSync(dir, { recursive: true });
   const missF = path.join(dir, 'missing.json'); let miss = {}; try { miss = JSON.parse(fs.readFileSync(missF, 'utf8')) || {}; } catch (e) { miss = {}; }
