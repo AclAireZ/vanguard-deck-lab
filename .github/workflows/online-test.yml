@@ -17,6 +17,12 @@ jobs:
         run: |
           mkdir -p /tmp/pw && cd /tmp/pw && npm init -y >/dev/null && npm install playwright@1.49.1
           npx playwright install --with-deps chromium
+      - name: Can this machine reach the official card pictures?
+        shell: bash
+        run: |
+          a=$(curl -s -o /dev/null -w "%{http_code} %{content_type} %{size_download}" https://cf-vanguard.com/wordpress/wp-content/images/cardlist/DZ-BT07/dzbt07_016.png)
+          b=$(curl -s -o /dev/null -w "%{http_code} %{content_type} %{size_download}" https://en.cf-vanguard.com/wordpress/wp-content/images/cardlist/dzbt07/dzbt07_016.png)
+          echo "::notice title=pictures reachable::JP $a | EN $b"
       - name: Two game windows meet through the real PeerJS service and play a whole game
         shell: bash
         run: |

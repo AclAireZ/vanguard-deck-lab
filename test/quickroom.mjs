@@ -15,14 +15,14 @@ async function open(name) {
   if (!CLOUD) await ctx.route(/cf-vanguard\.com|googleapis|cdnjs/, r => r.abort());
   const pg = await ctx.newPage(); pg.on('pageerror', e => errs.push(name + ': ' + e));
   if (!CLOUD) await pg.addInitScript(() => { localStorage.setItem('vg.peerHost', JSON.stringify({ host: '127.0.0.1', port: 9123, path: '/', secure: false })); });
-  pg.on('console', m => { if (/peer|PeerJS|ERROR/i.test(m.text())) errs.push(name + ' console: ' + m.text().slice(0, 200)); }); await pg.goto('http://127.0.0.1:9999/'); await pg.waitForTimeout(400); await pg.click('#modeSeg [data-mode="online"]'); await pg.waitForTimeout(200); return pg;
+  pg.on('console', m => { if (/peer|PeerJS|ERROR|pictures:/i.test(m.text())) errs.push(name + ' console: ' + m.text().slice(0, 200)); }); await pg.goto('http://127.0.0.1:9999/'); await pg.waitForTimeout(400); await pg.click('#modeSeg [data-mode="online"]'); await pg.waitForTimeout(200); return pg;
 }
 const A = await open('A'), B = await open('B');
 await A.click('#qlHost'); await A.waitForSelector('#qlCode:not([hidden])', { timeout: 30000 });
 const code = (await A.textContent('#qlCode')).trim(); console.log('room code', code);
 await B.selectOption('#deckSel0', 'TD01'); await B.fill('#qlIn', code.toLowerCase()); await B.click('#qlJoin');
 await B.waitForTimeout(CLOUD ? 3000 : 6000); console.log('A:', await A.textContent('#onStatus'), '| B:', await B.textContent('#onStatus'), errs); await A.waitForSelector('#table:not([hidden])', { timeout: 60000 }); await B.waitForSelector('#table:not([hidden])', { timeout: 60000 });
-const pics = async pg => { await pg.waitForTimeout(CLOUD ? 6000 : 0); return pg.evaluate(() => [...document.querySelectorAll('img.cf-img')].filter(i => i.complete && i.naturalWidth > 0).length); };
+const pics = async pg => { await pg.waitForTimeout(CLOUD ? 6000 : 0); return pg.evaluate(() => { const all = [...document.querySelectorAll('img.cf-img')]; const ok = all.filter(i => i.complete && i.naturalWidth > 0).length; if (!ok) console.log('pictures: ' + all.length + ' img tags; stat: ' + ((document.querySelector('#autoStat') || {}).textContent || '') + '; first: ' + (all[0] ? all[0].src : '-')); return ok; }); };
 const [pa, pb] = await Promise.all([pics(A), pics(B)]); console.log('card pictures shown: A', pa, 'B', pb);
 const drive = pg => pg.evaluate(async () => {
   const U = window.VGUI; const S = U.S; const t0 = Date.now(); const sig = g => g.players.map(P => [P.hand.length, P.deck.length, P.soul.length, P.drop.length, P.damage.length].join('.')).join('|');
