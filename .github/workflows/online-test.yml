@@ -44,7 +44,8 @@ jobs:
           echo "::notice title=rooms result::$msg"
           exit $code
       - name: Real account server (Supabase) — sign up, decks, history, friends, row rules
-        if: always()
+        # makes 2 throw-away accounts (vgci-*), so only when asked: run by hand, or a commit message containing [acct]
+        if: always() && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[acct]'))
         shell: bash
         run: |
           set +e
