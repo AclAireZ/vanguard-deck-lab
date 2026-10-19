@@ -29,9 +29,11 @@ async function login(pg, email, pw) { await tab(pg, 'login'); await pg.fill('[da
 const closeAcct = pg => pg.evaluate(() => { const m = document.querySelector('#acct'); m.hidden = true; m.innerHTML = ''; });
 
 const A = await open('A');
-check(await A.isVisible('#acctBtn') && /เข้าสู่ระบบ/.test(await A.textContent('#acctBtn')), 'account button on the title screen');
+check(await A.isVisible('#acct.gate') && !(await A.isVisible('#acct [data-close]')), 'game opens on the log-in window (no close button)');
+await A.mouse.click(5, 5); await A.waitForTimeout(200); check(await A.isVisible('#acct.gate'), 'clicking outside does not skip the log-in');
 await signup(A, 'Aichi', 'aichi@test.dev', 'secret12');
-check((await A.textContent('#acctBtn')).includes('Aichi'), 'sign up → logged in as Aichi (' + await msg(A) + ')');
+check((await A.textContent('#acctBtn')).includes('Aichi') && await A.isHidden('#acct'), 'sign up → logged in as Aichi, log-in window gone (' + await msg(A) + ')');
+await tab(A, 'profile');
 console.log('after signup:', await A.textContent('#acctBtn'), '|', await msg(A), '|', errs.join(';'), '|', await A.evaluate(() => document.querySelector('#acct').hidden + ' ' + (document.querySelector('#acct .mtabs') || {}).textContent));
 const tagA = (await A.textContent('#acTag', { timeout: 5000 })).trim(); check(/^[A-Z0-9]{6}$/.test(tagA), 'friend code shown: ' + tagA);
 // a deck made while logged in goes to the account
@@ -44,7 +46,7 @@ check(/ไม่ตรงกัน/.test(await msg(B)), 'password confirmation m
 await signup(B, 'Kai', 'aichi@test.dev', 'abcdef1'); check(/สมัครไว้แล้ว/.test(await msg(B)), 'same e-mail twice refused (' + await msg(B) + ')');
 await signup(B, 'Kai', 'kai@test.dev', 'abcdef1'); check((await B.textContent('#acctBtn')).includes('Kai'), 'second player signs up');
 await tab(B, 'profile'); await B.click('[data-act="logout"]'); await B.waitForTimeout(300);
-check(/เข้าสู่ระบบ/.test(await B.textContent('#acctBtn')), 'log out');
+check(/เข้าสู่ระบบ/.test(await B.textContent('#acctBtn')) && await B.isVisible('#acct.gate'), 'log out → back to the log-in window');
 await login(B, 'kai@test.dev', 'wrongpw'); check(/ไม่ถูกต้อง/.test(await msg(B)), 'wrong password refused (' + await msg(B) + ')');
 await login(B, 'kai@test.dev', 'abcdef1'); check((await B.textContent('#acctBtn')).includes('Kai'), 'log in with the right password');
 // session survives reopening the game

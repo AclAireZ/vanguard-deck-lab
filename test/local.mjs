@@ -41,7 +41,7 @@ await ctx.route('https://cardfight.fandom.com/**', r => {
 });
 await ctx.route('https://fonts.googleapis.com/**', r => r.fulfill({ contentType: 'text/css', body: '' }));
 const pg = await ctx.newPage(); const errs = []; pg.on('pageerror', e => errs.push(String(e)));
-await pg.goto('http://vg.test/'); await pg.waitForTimeout(300);
+await pg.addInitScript(() => { try { if (!localStorage.getItem('vg.sb')) localStorage.setItem('vg.sb', JSON.stringify({ off: true })); } catch (e) {} }); await pg.goto('http://vg.test/'); await pg.waitForTimeout(300);
 const lobby = await pg.evaluate(() => ({ online: !document.querySelector('#modeSeg [data-mode="online"]').hidden && document.querySelector('#roomPanel').hidden && !document.querySelector('#p2pPanel').hidden, box: !document.querySelector('#autoBox').hidden, base: document.querySelector('#imgBase').value, web: document.querySelector('#imgWeb').checked }));
 await pg.click('[data-view="0"]');                                   // deck viewer of the first deck: asks for every card's picture
 await pg.waitForFunction(() => /หาไม่พบ \d+ ใบ/.test(document.querySelector('#autoStat').textContent) && !/หาไม่พบ 0 ใบ/.test(document.querySelector('#autoStat').textContent), null, { timeout: 15000 }); await pg.waitForTimeout(800);

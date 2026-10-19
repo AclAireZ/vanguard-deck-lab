@@ -9,7 +9,7 @@ async function open(tag) {
   const ctx = await b.newContext({ viewport: { width: 1280, height: 800 } });   // separate contexts: nothing is shared between the two players but the codes
   await ctx.route('http://vg.test/**', r => (new URL(r.request().url()).pathname === '/' ? r.fulfill({ contentType: 'text/html', body: html }) : r.fulfill({ status: 404, body: '' })));
   await ctx.route('https://**', r => r.fulfill({ status: 404, body: '' }));
-  const pg = await ctx.newPage(); pg.on('pageerror', e => errs.push(tag + ': ' + e)); await pg.goto('http://vg.test/'); await pg.waitForTimeout(300);
+  const pg = await ctx.newPage(); pg.on('pageerror', e => errs.push(tag + ': ' + e)); await pg.addInitScript(() => { try { if (!localStorage.getItem('vg.sb')) localStorage.setItem('vg.sb', JSON.stringify({ off: true })); } catch (e) {} }); await pg.goto('http://vg.test/'); await pg.waitForTimeout(300);
   await pg.click('#modeSeg [data-mode="online"]'); await pg.evaluate(() => { document.querySelector('.qlman').open = true; }); await pg.evaluate(() => { window.VGUI.S.speed = 6; }); return pg;
 }
 const A = await open('host'); const B = await open('guest');

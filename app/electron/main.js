@@ -8,7 +8,7 @@ app.userAgentFallback = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/5
 const RELEASES = 'https://github.com/AclAireZ/vanguard-deck-lab/releases/latest';
 let win = null;
 function open() {
-  win = new BrowserWindow({ width: 1440, height: 900, minWidth: 960, minHeight: 600, backgroundColor: '#070205', autoHideMenuBar: true, title: 'Vanguard D Deck Lab ' + app.getVersion(), icon: path.join(__dirname, 'vg.ico'), webPreferences: { contextIsolation: true, sandbox: true, spellcheck: false } });
+  win = new BrowserWindow({ width: 1440, height: 900, minWidth: 960, minHeight: 600, backgroundColor: '#070205', autoHideMenuBar: true, title: 'Vanguard D Deck Lab ' + app.getVersion(), icon: path.join(__dirname, 'vg.ico'), webPreferences: { contextIsolation: true, sandbox: true, spellcheck: false, devTools: !app.isPackaged } });
   win.maximize();
   win.webContents.setWindowOpenHandler(({ url }) => { if (/^https?:/.test(url)) shell.openExternal(url); return { action: 'deny' }; });   // links (official card pages) open in the normal browser
   win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith('file:')) { e.preventDefault(); if (/^https?:/.test(url)) shell.openExternal(url); } });

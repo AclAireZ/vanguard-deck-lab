@@ -1554,7 +1554,7 @@ const QL = {
     this.code = code; this.role = 'host'; this.rejoin = !!opts.code; this.everLinked = false; this.rejoinGuest = false;
     setStatus(this.rejoin ? 'กำลังเปิดห้อง ' + code + ' อีกครั้ง…' : 'กำลังสร้างห้อง…');
     let shown = false; let paths = 0, failed = 0;
-    const ready = () => { if (shown || this.tryN !== my) return; shown = true; $('#qlCode').textContent = code; $('#qlCode').hidden = false; $('#qlCopy').hidden = false; setStatus(this.rejoin ? 'รอเพื่อนกลับเข้าห้อง ' + code + '…' : 'ส่งรหัส ' + code + ' ให้เพื่อน หรือให้เพื่อนกดเข้าจากรายการห้อง แล้วรอ…'); store.set('vg.qlLast', { code, role: 'host', t: Date.now() }); Rooms.draw(); };
+    const ready = () => { if (shown || this.tryN !== my) return; shown = true; this.up = code; $('#qlCode').textContent = code; $('#qlCode').hidden = false; $('#qlCopy').hidden = false; setStatus(this.rejoin ? 'รอเพื่อนกลับเข้าห้อง ' + code + '…' : 'ส่งรหัส ' + code + ' ให้เพื่อน หรือให้เพื่อนกดเข้าจากรายการห้อง แล้วรอ…'); store.set('vg.qlLast', { code, role: 'host', t: Date.now() }); Rooms.draw(); };
     const bad = () => { if (++failed >= paths && !shown && this.tryN === my) setStatus('ต่ออินเทอร์เน็ตไม่ได้ — ตรวจเน็ตแล้วกดสร้างห้องอีกครั้ง', true); };
     if (window.Peer) {
       paths++;
@@ -1654,7 +1654,8 @@ function p2pReset() { P2P.close(); P2P.viaQL = false; QL.drop(); if ($('#qlCode'
    Keeps: profile (name, friend code), decks, match history, friends. Online status and room invites travel over the same MQTT broker as the room list. */
 const Acct = {
   s: null, me: null, refreshing: null, tab: 'login', msg: '', err: false, view: null,
-  cfg() { const o = store.get('vg.sb'); if (o && typeof o === 'object' && /^https?:\/\//.test(o.url || '') && o.key) return o; return LOCAL && LOCAL.sb && LOCAL.sb.url && LOCAL.sb.key ? LOCAL.sb : null; },
+  gate() { return !!(LOCAL && this.on() && !this.s); },   // the game needs an account: no session → only the log-in / sign-up window
+  cfg() { const o = store.get('vg.sb'); if (o && o.off) return null; if (o && typeof o === 'object' && /^https?:\/\//.test(o.url || '') && o.key) return o; return LOCAL && LOCAL.sb && LOCAL.sb.url && LOCAL.sb.key ? LOCAL.sb : null; },
   on() { return !!this.cfg(); },
   async req(path, opt) {
     const c = this.cfg(); if (!c) throw new Error('ยังไม่ได้ตั้งค่าเซิร์ฟเวอร์บัญชี'); opt = opt || {};
@@ -1792,7 +1793,7 @@ const Presence = {
     }
   },
   online(id) { const s = this.st[id]; return s && Date.now() - s.seen < 5 * 60e3 && Math.abs(Date.now() - s.t) < 15 * 60e3 ? s : null; },
-  invite(id) { if (!this.c || !Acct.me || QL.role !== 'host' || !QL.code) return false; this.c.publish(MQP + 'inv/' + id, JSON.stringify({ from: Acct.me.id, n: Acct.me.name, code: QL.code, t: Date.now() }), { qos: 1 }); return true; },
+  invite(id) { if (!this.c || !Acct.me || QL.role !== 'host' || !QL.code || QL.up !== QL.code) return false; this.c.publish(MQP + 'inv/' + id, JSON.stringify({ from: Acct.me.id, n: Acct.me.name, code: QL.code, t: Date.now() }), { qos: 1 }); return true; },
 };
 function showInvite(name, code) {
   const box = $('#invToast'); if (!box) return;
@@ -1807,6 +1808,11 @@ function acctUI() {
   b.hidden = !LOCAL;
   b.innerHTML = Acct.s ? '<i class="dot"></i>' + esc(Acct.me ? Acct.me.name : 'บัญชี') : 'เข้าสู่ระบบ / สมัคร';
   b.classList.toggle('in', !!Acct.s);
+  const m = $('#acct'); const g = Acct.gate();
+  document.documentElement.classList.toggle('vg-gate', g);
+  if (g && m.hidden) { Acct.tab = Acct.tab === 'signup' || Acct.tab === 'forgot' ? Acct.tab : 'login'; m.hidden = false; }
+  if (!g && m.classList.contains('gate') && Acct.s) { m.hidden = true; m.innerHTML = ''; }
+  m.classList.toggle('gate', g);
   acctDraw();
 }
 function acctOpen(tab) { Acct.tab = tab || (Acct.s ? 'profile' : 'login'); Acct.msg = ''; $('#acct').hidden = false; acctDraw(); if (Acct.tab === 'stats') acctStats(); if (Acct.s && Acct.tab === 'friends') Friends.load().catch(e => acctSay(e.message, true)); const f = $('#acct input'); if (f) f.focus(); }
@@ -1817,7 +1823,7 @@ function acctDraw() {
   if (!tabs.some(t => t[0] === Acct.tab)) Acct.tab = tabs[0][0];
   let body = '';
   if (!Acct.on()) body = '<p class="note">ระบบบัญชียังไม่ได้เชื่อมกับเซิร์ฟเวอร์ — เจ้าของเกมต้องตั้งค่า Supabase ก่อน ตอนนี้เล่นได้ทุกโหมดโดยไม่ต้องมีบัญชี</p>';
-  else if (Acct.tab === 'login') body = '<form class="acf" data-af="login"><label>อีเมล<input name="email" type="email" autocomplete="email" required></label><label>รหัสผ่าน<input name="pw" type="password" autocomplete="current-password" required minlength="6"></label><button class="go" type="submit">เข้าสู่ระบบ</button></form><p class="note">ยังไม่มีบัญชี? กดแท็บ <b>สมัครสมาชิก</b> · ไม่มีบัญชีก็เล่นได้ทุกโหมด บัญชีใช้เก็บเด็ค สถิติ และรายชื่อเพื่อน</p>';
+  else if (Acct.tab === 'login') body = '<form class="acf" data-af="login"><label>อีเมล<input name="email" type="email" autocomplete="email" required></label><label>รหัสผ่าน<input name="pw" type="password" autocomplete="current-password" required minlength="6"></label><button class="go" type="submit">เข้าสู่ระบบ</button></form><p class="note">ยังไม่มีบัญชี? กดแท็บ <b>สมัครสมาชิก</b> — ใช้เวลาไม่ถึงนาที</p>';
   else if (Acct.tab === 'signup') body = '<form class="acf" data-af="signup"><label>ชื่อในเกม<input name="name" maxlength="16" required autocomplete="nickname"></label><label>อีเมล<input name="email" type="email" autocomplete="email" required></label><label>รหัสผ่าน (อย่างน้อย 6 ตัว)<input name="pw" type="password" autocomplete="new-password" required minlength="6"></label><label>ยืนยันรหัสผ่าน<input name="pw2" type="password" autocomplete="new-password" required minlength="6"></label><button class="go" type="submit">สมัครสมาชิก</button></form><p class="note">เด็คที่จัดไว้ในเครื่องนี้จะถูกเก็บเข้าบัญชีให้เองหลังสมัคร</p>';
   else if (Acct.tab === 'forgot') body = '<form class="acf" data-af="forgot"><label>อีเมลที่ใช้สมัคร<input name="email" type="email" autocomplete="email" required></label><button class="ghost strong" type="submit">ส่งรหัสรีเซ็ตไปที่อีเมล</button></form><form class="acf" data-af="reset"><label>รหัสจากอีเมล<input name="token" inputmode="numeric" autocomplete="one-time-code" required></label><label>รหัสผ่านใหม่<input name="pw" type="password" autocomplete="new-password" required minlength="6"></label><button class="go" type="submit">ตั้งรหัสผ่านใหม่</button></form>';
   else if (Acct.tab === 'profile') {
@@ -1836,7 +1842,9 @@ function acctDraw() {
       + '<h4 class="ach">เพื่อนของคุณ (' + Friends.list.length + ')</h4>' + (Friends.list.length ? Friends.list.map(row).join('') : '<p class="note">ยังไม่มีเพื่อน — ส่งรหัสเพื่อนในแท็บโปรไฟล์ให้เพื่อน หรือใส่รหัสของเพื่อนด้านบน</p>')
       + '<p class="note">กด <b>ชวนเข้าห้อง</b> เกมจะสร้างห้องให้แล้วส่งคำชวนไปที่เกมของเพื่อน (เพื่อนต้องเปิดเกมและเข้าสู่ระบบอยู่)</p>';
   }
-  m.innerHTML = '<div class="mbox acbox" role="dialog" aria-modal="true" aria-label="บัญชีผู้เล่น"><div class="achead"><h2>บัญชีผู้เล่น</h2><button type="button" class="ghost" data-close="1">ปิด</button></div>'
+  const gate = Acct.gate();
+  m.innerHTML = '<div class="mbox acbox" role="dialog" aria-modal="true" aria-label="บัญชีผู้เล่น"><div class="achead"><h2>' + (gate ? 'Vanguard D <span>Deck Lab</span>' : 'บัญชีผู้เล่น') + '</h2>' + (gate ? '' : '<button type="button" class="ghost" data-close="1">ปิด</button>') + '</div>'
+    + (gate ? '<p class="note acgate">เข้าสู่ระบบหรือสมัครสมาชิกเพื่อเริ่มเล่น · บัญชีเก็บเด็ค สถิติ และรายชื่อเพื่อนของคุณไว้ทุกเครื่อง</p>' : '')
     + (Acct.on() ? '<div class="mtabs">' + tabs.map(t => '<button type="button" data-atab="' + t[0] + '" aria-pressed="' + (t[0] === Acct.tab) + '">' + t[1] + '</button>').join('') + '</div>' : '')
     + '<div class="mscroll acbody">' + body + '</div><div class="status' + (Acct.err ? ' err' : '') + '" id="acctMsg" role="status">' + esc(Acct.msg || '') + '</div></div>';
 }
@@ -1859,7 +1867,7 @@ function acctWire() {
   const m = $('#acct');
   $('#acctBtn').addEventListener('click', () => acctOpen());
   m.addEventListener('click', async e => {
-    if (e.target === m || e.target.closest('[data-close]')) { m.hidden = true; m.innerHTML = ''; return; }
+    if ((e.target === m || e.target.closest('[data-close]')) && !Acct.gate()) { m.hidden = true; m.innerHTML = ''; return; }
     const t = e.target.closest('[data-atab]'); if (t) { Acct.tab = t.dataset.atab; Acct.msg = ''; acctDraw(); if (Acct.tab === 'stats') acctStats(); if (Acct.tab === 'friends') Friends.load().catch(x => acctSay(x.message, true)); return; }
     const a = e.target.closest('[data-act]');
     if (a && a.dataset.act === 'logout') { await Acct.logout(); acctOpen('login'); acctSay('ออกจากระบบแล้ว'); return; }
@@ -1882,7 +1890,7 @@ function acctWire() {
       else if (k === 'reset') { const em = Acct.resetEmail || (m.querySelector('[data-af="forgot"] [name="email"]') || {}).value || ''; if (!em) throw new Error('ใส่อีเมลแล้วกดส่งรหัสก่อน'); await Acct.resetWith(em.trim(), v('token'), f.elements.pw.value); Acct.tab = 'profile'; acctSay('ตั้งรหัสผ่านใหม่แล้ว และเข้าสู่ระบบแล้ว'); }
       else if (k === 'rename') { await Acct.rename(v('name')); acctSay('บันทึกชื่อแล้ว'); }
       else if (k === 'addfriend') { const p = await Friends.add(v('tag')); acctSay('เพิ่ม ' + p.name + ' เป็นเพื่อนแล้ว'); }
-      acctDraw(); if (Acct.tab === 'stats') acctStats();
+      acctUI(); if (Acct.tab === 'stats') acctStats();
     } catch (x) { acctSay(x.message, true); }
     if (btn && btn.isConnected) btn.disabled = false;
   });

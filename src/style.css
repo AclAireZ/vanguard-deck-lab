@@ -1100,3 +1100,8 @@ p.manual a, p.betan a, .bd-list a, .irow a { color: var(--cyan); }
 .invtoast code { font-family: var(--f-display); font-weight: 700; letter-spacing: .12em; color: var(--gold); }
 @media (max-width: 520px) { .acsts { grid-template-columns: minmax(0, 1fr); } .lb-acct { max-width: 140px; } }
 .acbox .go { font-size: 15px; padding: 9px 20px; min-height: 0; } .acbox .go::after { display: none; }
+.modal.gate { background: radial-gradient(ellipse at 50% 30%, rgba(30, 24, 70, .9), rgba(4, 5, 14, .97) 70%); z-index: 3000; }
+.modal.gate .acbox { width: min(480px, 100%); }
+.modal.gate .achead h2 { font-size: 26px; }
+.modal.gate .achead h2 span { background: linear-gradient(180deg, #fff3c4 10%, var(--gold) 55%, #b9791d); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.acgate { margin: 0; }

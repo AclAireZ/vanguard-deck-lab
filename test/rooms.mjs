@@ -24,7 +24,7 @@ async function open(name, opts) {
     if (!cloud) { localStorage.setItem('vg.peerHost', JSON.stringify({ host: '127.0.0.1', port: 9123, path: '/', secure: false })); localStorage.setItem('vg.mqtt', JSON.stringify(['ws://127.0.0.1:9124/mqtt'])); }
     if (dead) localStorage.setItem('vg.peerHost', JSON.stringify({ host: '127.0.0.1', port: 9, path: '/', secure: false }));
   }, [CLOUD, deadPeer]);
-  await pg.goto('http://127.0.0.1:9999/'); await pg.waitForTimeout(400); await pg.click('#modeSeg [data-mode="online"]'); await pg.waitForTimeout(200);
+  await pg.addInitScript(() => { try { if (!localStorage.getItem('vg.sb')) localStorage.setItem('vg.sb', JSON.stringify({ off: true })); } catch (e) {} }); await pg.goto('http://127.0.0.1:9999/'); await pg.waitForTimeout(400); await pg.click('#modeSeg [data-mode="online"]'); await pg.waitForTimeout(200);
   return pg;
 }
 const sig = pg => pg.evaluate(() => { const g = window.VGUI.S.game; return g ? { over: g.over, n: g.history.length, seat: window.VGUI.S.seat, s: g.players.map(P => [P.hand.length, P.deck.length, P.soul.length, P.drop.length, P.damage.length].join('.')).join('|') } : null; });

@@ -15,7 +15,7 @@ async function open(name) {
   if (!CLOUD) await ctx.route(/cf-vanguard\.com|googleapis|cdnjs/, r => r.abort());
   const pg = await ctx.newPage(); pg.on('pageerror', e => errs.push(name + ': ' + e));
   if (!CLOUD) await pg.addInitScript(() => { localStorage.setItem('vg.peerHost', JSON.stringify({ host: '127.0.0.1', port: 9123, path: '/', secure: false })); });
-  pg.on('console', m => { if (/peer|PeerJS|ERROR|pictures:/i.test(m.text())) errs.push(name + ' console: ' + m.text().slice(0, 200)); }); await pg.goto('http://127.0.0.1:9999/'); await pg.waitForTimeout(400); await pg.click('#modeSeg [data-mode="online"]'); await pg.waitForTimeout(200); return pg;
+  pg.on('console', m => { if (/peer|PeerJS|ERROR|pictures:/i.test(m.text())) errs.push(name + ' console: ' + m.text().slice(0, 200)); }); await pg.addInitScript(() => { try { if (!localStorage.getItem('vg.sb')) localStorage.setItem('vg.sb', JSON.stringify({ off: true })); } catch (e) {} }); await pg.goto('http://127.0.0.1:9999/'); await pg.waitForTimeout(400); await pg.click('#modeSeg [data-mode="online"]'); await pg.waitForTimeout(200); return pg;
 }
 const A = await open('A'), B = await open('B');
 await A.click('#qlHost'); await A.waitForSelector('#qlCode:not([hidden])', { timeout: 30000 });

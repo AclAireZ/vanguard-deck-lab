@@ -7,7 +7,7 @@ const b = await chromium.launch(); const report = [];
 for (const [w, h] of sizes) {
   const pg = await b.newPage({ viewport: { width: w, height: h } }); const errs = []; pg.on('pageerror', e => errs.push(String(e)));
   await pg.route('**/*', r => r.request().url().startsWith('http://vg.test/') ? r.fulfill({ contentType: 'text/html', body: html }) : r.abort());
-  await pg.goto('http://vg.test/'); await pg.waitForTimeout(1600);
+  await pg.addInitScript(() => { try { if (!localStorage.getItem('vg.sb')) localStorage.setItem('vg.sb', JSON.stringify({ off: true })); } catch (e) {} }); await pg.goto('http://vg.test/'); await pg.waitForTimeout(1600);
   const over = async () => pg.evaluate(() => ({ sx: document.documentElement.scrollWidth > innerWidth + 1, sy: document.documentElement.scrollHeight > innerHeight + 1 }));
   const shot = async n => { await pg.screenshot({ path: 'shots/size-' + w + 'x' + h + '-' + n + '.png' }); report.push(w + 'x' + h + ' ' + n + ' ' + JSON.stringify(await over())); };
   await shot('lobby');
