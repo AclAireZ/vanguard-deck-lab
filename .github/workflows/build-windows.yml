@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+        with: { node-version: 22 }
       - name: Build the game page
         run: node build.mjs
       - name: Put the game inside the app
@@ -23,7 +23,14 @@ jobs:
         run: npm install
       - name: Smoke test (start the app on Windows)
         working-directory: app/electron
-        run: node smoke.mjs
+        shell: bash
+        run: |
+          set +e
+          node smoke.mjs > smoke.txt 2>&1; code=$?
+          cat smoke.txt
+          msg=$(tail -c 3500 smoke.txt | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
+          echo "::notice title=smoke result::$msg"
+          exit $code
       - name: Make the installer and the portable exe
         working-directory: app/electron
         env: { CSC_IDENTITY_AUTO_DISCOVERY: "false" }

@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+        with: { node-version: 22 }
       - name: Build the game
         run: node build.mjs
       - name: Install a browser for the test
@@ -18,4 +18,11 @@ jobs:
           mkdir -p /tmp/pw && cd /tmp/pw && npm init -y >/dev/null && npm install playwright@1.49.1
           npx playwright install --with-deps chromium
       - name: Two game windows meet through the real PeerJS service and play a whole game
-        run: CLOUD=1 PW=/tmp/pw/node_modules/playwright/index.mjs node test/quickroom.mjs
+        shell: bash
+        run: |
+          set +e
+          CLOUD=1 PW=/tmp/pw/node_modules/playwright/index.mjs node test/quickroom.mjs > out.txt 2>&1; code=$?
+          cat out.txt
+          msg=$(tail -c 3500 out.txt | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
+          echo "::notice title=quickroom result::$msg"
+          exit $code
