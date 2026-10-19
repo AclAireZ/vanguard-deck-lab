@@ -79,3 +79,9 @@ create trigger vg_on_new_user after insert on auth.users for each row execute fu
 insert into public.profiles (id, name, tag)
   select u.id, left(coalesce(nullif(trim(u.raw_user_meta_data->>'name'), ''), split_part(u.email, '@', 1)), 16), upper(substr(md5(u.id::text), 1, 6))
   from auth.users u where not exists (select 1 from public.profiles p where p.id = u.id);
+
+-- hardening (applied 2026-10-19): the sign-up function is only for the trigger; players may change only their name; signed-out visitors read nothing
+revoke execute on function public.vg_new_user() from public, anon, authenticated;
+revoke update on public.profiles from anon, authenticated;
+grant update (name) on public.profiles to authenticated;
+revoke all on public.profiles, public.decks, public.matches, public.friends from anon;

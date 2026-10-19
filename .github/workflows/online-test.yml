@@ -43,3 +43,13 @@ jobs:
           msg=$(tail -c 3500 rooms.txt | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
           echo "::notice title=rooms result::$msg"
           exit $code
+      - name: Real account server (Supabase) — sign up, decks, history, friends, row rules
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          node test/account-real.mjs > acct.txt 2>&1; code=$?
+          cat acct.txt
+          msg=$(tail -c 3500 acct.txt | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
+          echo "::notice title=account server result::$msg"
+          exit $code
