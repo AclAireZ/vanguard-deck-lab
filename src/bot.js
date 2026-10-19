@@ -159,7 +159,7 @@ VG.bot = function (G) {
     case 'guard': return pickGuard(G, d);
     case 'ride': { let i = idxOf(d, o => o.a === 'rideDeck'); if (i < 0) i = idxOf(d, o => o.a === 'ride' && o.persona); if (i < 0) i = idxOf(d, o => o.a === 'ride' && G.grade(G.cards[o.iid]) > G.grade(G.vg(d.player))); if (i < 0) i = idxOf(d, o => o.a === 'skip'); return [i]; }
     case 'yesno': { if (d.idx != null && d.iid != null) { const ab = G.getAb(G.cards[d.iid], d.idx); if (ab && ab.assist) return [1]; } return [0]; }
-    case 'boost': return [0];
+    case 'boost': return d.prefer === 'no' ? [1] : [0];   // keep the vanguard unboosted for its own multi-boost skill
     case 'option': case 'order': return [0];
     default: return d.min > 0 ? d.options.slice(0, d.min).map((o, i) => i) : [];
   }

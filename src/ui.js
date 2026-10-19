@@ -653,7 +653,7 @@ function renderPrompt() {
       case 'mulligan': s = 'คลิกการ์ดในมือที่ต้องการเปลี่ยน'; btn.push(B(n ? 'เปลี่ยน ' + n + ' ใบ' : 'ไม่เปลี่ยน', 'data-do="confirm"', 'pri')); break;
       case 'cards': s = d.min === d.max ? 'เลือก ' + d.min + ' ใบ' : 'เลือก ' + d.min + '–' + d.max + ' ใบ'; if (!(d.min === 1 && d.max === 1)) btn.push(B(n ? 'ยืนยัน (' + n + ')' : (d.min === 0 ? 'ไม่เลือก' : 'ยืนยัน'), 'data-do="confirm"' + (n < d.min || n > d.max ? ' disabled' : ''), 'pri')); break;
       case 'circle': s = 'คลิกเซอร์เคิลที่เรืองแสง (คอลทับยูนิทเดิมได้)'; if (d.min === 0) btn.push(B('ข้าม', 'data-do="skip"')); break;
-      default: s = d.sub || ''; d.options.forEach((o, i) => btn.push(B(o.label, 'data-i="' + i + '"', i === 0 ? 'pri' : '')));
+      default: s = d.sub || ''; { const pi = d.prefer ? Math.max(0, d.options.findIndex(o => o.id === d.prefer)) : 0; d.options.forEach((o, i) => btn.push(B(o.label, 'data-i="' + i + '"', i === pi ? 'pri' : ''))); }   // d.prefer: the recommended answer is the highlighted one
     }
   }
   if (d && d.man && !g.over && !S.busy && canAnswer(d) && !S.picker) btn.push(B('✋ ทำเอง', 'data-do="manual" title="ทำตามข้อความการ์ดด้วยมือ สำหรับสกิลที่ยังไม่ออโต้"', 'sm man'));
@@ -2178,6 +2178,10 @@ function boot() {
     $('#imgBase').addEventListener('change', e => { let v = e.target.value.trim(); const m = /^(https?:\/\/.+\/)[a-z0-9-]+\/[a-z0-9_-]+\.(?:png|jpg|webp)$/i.exec(v); if (m) v = m[1]; if (v && !v.endsWith('/')) v += '/'; e.target.value = v; store.set('vg.imgBase', v); autoReset(); });
     $('#imgWeb').addEventListener('change', e => { store.set('vg.imgWeb', e.target.checked); autoReset(); });
     $('#imgRetry').addEventListener('click', () => { autoReset(); findBack(); });
+    { const show = o => { if (!o || o.n == null) return; $('#cacheRow').hidden = false; $('#cacheStat').textContent = 'เก็บรูปไว้ในเครื่องนี้แล้ว ' + o.n.toLocaleString('en-US') + ' รูป (' + (o.bytes / 1048576).toFixed(0) + ' MB) — เปิดครั้งต่อไปขึ้นทันที ไม่ต้องโหลดใหม่'; };
+      const ask = p => fetch('vgcache://img/' + p).then(r => r.json()).then(show).catch(() => {});   // only the game app answers this (picture cache on disk)
+      ask('stat'); $('#navOpt').addEventListener('click', () => ask('stat'));
+      $('#cacheClear').addEventListener('click', () => { ask('clear').then(() => { autoReset(); }); }); }
     $('#wikiOn').checked = wikiOn(); $('#wikiOn').addEventListener('change', e => { store.set('vg.wikiText', e.target.checked); });
     $('#backUrl').value = store.get('vg.backUrl') || ''; $('#backUrl').addEventListener('change', e => { store.set('vg.backUrl', e.target.value.trim()); findBack(); });
   }

@@ -34,6 +34,16 @@ jobs:
           msg=$(tail -c 3500 smoke.txt | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
           echo "::notice title=smoke result::$msg"
           exit $code
+      - name: Picture cache test (pictures kept on disk, shown with the site off)
+        working-directory: app/electron
+        shell: bash
+        run: |
+          set +e
+          node cachetest.mjs > cache.txt 2>&1; code=$?
+          cat cache.txt
+          msg=$(tail -c 2000 cache.txt | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
+          echo "::notice title=picture cache result::$msg"
+          exit $code
       - name: Make the installer and the portable exe
         working-directory: app/electron
         env: { CSC_IDENTITY_AUTO_DISCOVERY: "false" }

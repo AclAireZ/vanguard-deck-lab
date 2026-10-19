@@ -1381,6 +1381,11 @@ class Game {
       yield* this.doBattle(p, o.iid, o.target);
     }
   }
+  /* 'nb' = the attacker has a "when this unit attacks while not boosted" skill that boosts it with several units; 'mb' = a multi-boost skill on attack; null = none (or already used this turn) */
+  selfBoostSkill(a) {
+    const abs = this.def(a).abilities || []; for (let idx = 0; idx < abs.length; idx++) { const ab = abs[idx]; const x = ab.src; if (!x || ab.type !== 'auto' || !x.on || x.on.e !== 'atk' || !JSON.stringify(x.d || []).includes('"mboost"')) continue; if (!this.limitOk(a, idx, ab)) continue; return x.on.bo === 0 ? 'nb' : 'mb'; }
+    return null;
+  }
   *doBattle(p, aiid, tiid) {
     const a = this.cards[aiid], t = this.cards[tiid];
     let booster = null;
@@ -1388,7 +1393,8 @@ class Game {
       const bc = this.at(p, BEHIND[a.pos]);
       if (bc && !bc.locked && !bc.rest && this.stat(bc).boost && !this.stat(bc).cantBoost && FRONT.includes(a.pos) && !this.stat(a).noBoosted) {
 
-        const y = yield* this.yesNo(p, { kind: 'boost', title: 'บูสต์ด้วย ' + this.name(bc) + '?', iid: bc.iid, attacker: aiid, options: [{ id: 'yes', label: 'บูสต์' }, { id: 'no', label: 'ไม่บูสต์' }] });
+        const mb = this.selfBoostSkill(a);   // the attacker's own "when this unit attacks (while not boosted), boost it with all your back row units": a normal boost first would spoil it
+        const y = yield* this.yesNo(p, Object.assign({ kind: 'boost', title: 'บูสต์ด้วย ' + this.name(bc) + '?', iid: bc.iid, attacker: aiid, options: [{ id: 'yes', label: 'บูสต์' }, { id: 'no', label: mb ? 'ไม่บูสต์ (ใช้สกิลบูสต์ของ ' + this.name(a) + ')' : 'ไม่บูสต์' }] }, mb ? { prefer: 'no', sub: 'แนะนำ "ไม่บูสต์": ' + this.name(a) + ' มีสกิลบูสต์ด้วยยูนิทแถวหลังหลายใบพร้อมกันตอนโจมตี' + (mb === 'nb' ? ' (ใช้ได้เฉพาะตอนไม่ถูกบูสต์)' : ' (ใบที่บูสต์ตามปกติไม่นับรวม)') } : {}));
         if (y) booster = bc.iid;
       }
     }
