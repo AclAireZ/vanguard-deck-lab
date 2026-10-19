@@ -1174,3 +1174,5 @@ p.manual a, p.betan a, .bd-list a, .irow a { color: var(--cyan); }
 .backprev.img { background: var(--cbimg) center / cover no-repeat, #000; }
 .backpick-t { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .has-back .card.gz .cb { background-image: var(--cbimgG, var(--cbimg)); }
+.ntoast { position: fixed; left: 50%; bottom: 24px; z-index: 2700; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; max-width: min(560px, calc(100vw - 32px)); padding: 10px 16px; border-radius: 12px 3px 12px 3px; border: 1px solid color-mix(in srgb, var(--gold) 60%, var(--line)); background: rgba(14, 16, 40, .96); color: #eef0ff; font-size: 14px; box-shadow: 0 12px 40px rgba(0, 0, 0, .55); transition: opacity .2s, transform .2s; }
+.ntoast.on { opacity: 1; transform: translate(-50%, 0); }

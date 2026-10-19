@@ -1045,6 +1045,17 @@ function onCard(iid) {
   if (cardAct(iid, c)) return;
   if (seen) openCard(c.no, iid);     // nothing to do with this card right now: read it
 }
+/* why an order in hand cannot be played now (best guess from what the game knows) */
+function orderWhyNot(cd) {
+  const g = S.game; const p = S.mode === 'solo' ? g.active : S.seat;
+  if (cd.noPlay) return 'ใบนี้เพลย์จากมือไม่ได้ตามข้อความการ์ด' + (/Artisaria/.test((cd.text || []).join(' ')) ? ' — จะถูกวางในออเดอร์โซนด้วยสกิลของ Artisaria' : ' — ใช้ได้ด้วยวิธีที่เขียนไว้บนการ์ด');
+  if (cd.orderKind === 'blitz') return 'บลิตซ์ออเดอร์เพลย์ได้ตอนการ์ดในการ์ดสเต็ป (ตอนถูกโจมตี)';
+  if ((cd.grade || 0) > g.grade(g.vg(p))) return 'เกรดของออเดอร์สูงกว่าแวนการ์ดของคุณ';
+  if ((g.tf['ord' + p] || 0) >= 1) return 'เทิร์นนี้เพลย์ออเดอร์ไปแล้ว (ปกติได้เทิร์นละ 1 ใบ)';
+  if (g.phase !== 'main') return 'เพลย์ออเดอร์ได้ในเมนเฟส';
+  return 'ยังเพลย์ไม่ได้ตอนนี้ — เงื่อนไขหรือคอสต์ของการ์ดยังไม่ครบ (ดูในข้อความการ์ด)';
+}
+function noteToast(t) { let el = document.getElementById('noteToast'); if (!el) { el = document.createElement('div'); el.id = 'noteToast'; el.className = 'ntoast'; el.setAttribute('role', 'status'); document.body.appendChild(el); } el.textContent = t; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); clearTimeout(noteToast.t); noteToast.t = setTimeout(() => el.classList.remove('on'), 4200); }
 /* what a click on a card does in the decision that is open; false = nothing (the card window opens instead) */
 function cardAct(iid, c) {
   const pile = () => { if (c.zone === 'drop' || c.zone === 'damage' || c.zone === 'soul' || c.zone === 'order' || c.zone === 'removed' || c.zone === 'bind' || c.zone === 'gauge' || c.zone === 'prison' || c.zone === 'gzone' || c.zone === 'memory' || c.zone === 'mbox') { viewZone(c.owner, c.zone); return true; } return false; };
@@ -1056,6 +1067,7 @@ function cardAct(iid, c) {
     { const acts = o.map((x, i) => (x.a === 'act' && x.iid === iid ? i : -1)).filter(i => i >= 0); if (acts.length === 1) { submit([acts[0]]); return true; } if (acts.length > 1) { const pr = $('#prompt'); pr.classList.remove('flash'); void pr.offsetWidth; pr.classList.add('flash'); Sfx.play('select'); return true; } }
     if (pile()) return true;
     if (S.src) { S.src = null; Sfx.play('unselect'); render(); return true; }
+    if (c.zone === 'hand' && c.owner === d.player) { const cd = C[c.no]; if (cd && cd.type === 'order') noteToast(orderWhyNot(cd)); }   // an order that cannot be played now: say why (the card window opens too)
     return false;
   }
   if (d.kind === 'attack') {
