@@ -221,6 +221,7 @@ function renderLobby() {
   if (S.lbSwap) { const w = S.lbSwap; S.lbSwap = 0; document.querySelectorAll('#slots .dk').forEach((el, i) => { if (w === true || w === i + 1) el.classList.add('sw'); }); }
   $('#stageMode').textContent = { solo: 'SOLO FIGHT', bot: 'VS CPU', online: 'LINK FIGHT' }[S.mode] || '';
   { const l = store.get('vg.lastRoom'); const ok = online && l && l.code && Date.now() - (l.t || 0) < 12 * 3600e3; $('#rejoinBtn').hidden = !ok; if (ok) $('#rejoinBtn').textContent = 'กลับเข้าห้องล่าสุด ' + l.code.toUpperCase(); }
+  if (LOCAL) { if (online) Rooms.start(); else Rooms.stop(); const l = store.get('vg.qlLast'); const ok = online && l && /^[A-Z2-9]{6}$/.test(l.code || '') && Date.now() - (l.t || 0) < 12 * 3600e3; $('#qlBack').hidden = !ok; if (ok) $('#qlBack').textContent = 'กลับเข้าห้องล่าสุด ' + l.code; }
   $('#firstSec').hidden = online; $('#onlineSec').hidden = !online; $('#p2pSec').hidden = !online; $('#goRow').hidden = online;
   const sv = store.get('vg.save');
   $('#resumeBtn').hidden = !(sv && VG.DECKS[sv.decks[0]] && VG.DECKS[sv.decks[1]] && sv.history && sv.history.length);
@@ -228,8 +229,9 @@ function renderLobby() {
   $('#goBtn').disabled = bad; $('#createBtn').disabled = bad; $('#joinBtn').disabled = bad;
   $('#goNote').textContent = bad ? 'เด็คที่เลือกยังเล่นไม่ได้: ต้องมีเกรด 0 ในไรด์เด็ค และเมนเด็คอย่างน้อย 20 ใบ' : '';
   { const R = VG.DB.jp ? VG.DB.rows.filter(r => r.jno) : VG.DB.rows; const full = R.filter(r => r.auto && !r.part).length, semi = R.filter(r => r.semi).length, part = R.filter(r => r.part && !r.semi).length; const n = x => x.toLocaleString('en-US'); const pc = x => ' (' + Math.round(x / VG.DB.count * 100) + '%)'; $('#dbStat').textContent = VG.DB.count ? (VG.DB.jp ? 'การ์ดชุดญี่ปุ่น ' : 'การ์ด ') + n(VG.DB.count) + ' ใบ · ออโต้ครบ ' + n(full) + pc(full) + ' · กึ่งออโต้ ' + n(semi) + pc(semi) + ' · ออโต้บางส่วน ' + n(part) + pc(part) : ''; }
-  if (online) Net.init().then(ok => { if (!ok) setStatus('โหมดออนไลน์ใช้ได้เมื่อเปิดหน้านี้ใน Claude ขณะลงชื่อเข้าใช้ และมีสิทธิ์แก้ไขหน้านี้', true); });
+  if (online && !LOCAL) Net.init().then(ok => { if (!ok) setStatus('โหมดออนไลน์ใช้ได้เมื่อเปิดหน้านี้ใน Claude ขณะลงชื่อเข้าใช้ และมีสิทธิ์แก้ไขหน้านี้', true); });
 }
+function myName() { const n = store.get('vg.name'); return typeof n === 'string' ? n.trim().slice(0, 16) : ''; }
 function setStatus(t, err) { const el = $('#onStatus'); el.textContent = t || ''; el.classList.toggle('err', !!err); }
 function officialLink(c, label) { return '<a href="' + (c.jno ? 'https://cf-vanguard.com/cardlist/?cardno=' + encodeURIComponent(c.jno).replace(/%2F/g, '/') : OFFICIAL + encodeURIComponent(c.official || c.no).replace(/%2F/g, '/')) + '" target="_blank" rel="noopener">' + label + ' ↗</a>'; }
 function cardNote(c) {
@@ -241,8 +243,8 @@ function cardNote(c) {
   if (!c.auto) return t + sum + wb + '<p class="manual">สกิลของใบนี้ยังไม่ทำงานอัตโนมัติ (ค่าพลัง ชิลด์ และไอคอนบนการ์ดใช้ได้ตามปกติ) — ระหว่างเล่นให้กดปุ่ม <b>✋ ทำเอง</b> แล้วทำตามข้อความการ์ดด้วยมือ · ' + src + '</p>' + un;
   if (c.semi) return t + sum + wb + '<p class="manual semi">กึ่งออโต้ — สกิล ' + c.miss + ' ข้อของใบนี้ เกมรู้จังหวะ ตรวจเงื่อนไขที่อ่านออก และหักคอสต์ให้ แล้วจะหยุดรอให้คุณทำ<b>เอฟเฟกต์</b>เองด้วยปุ่ม <b>✋ ทำเอง</b> ตามข้อความการ์ด (กด "เสร็จแล้ว" เมื่อทำครบ) · ' + src + '</p>' + un;
   if (c.partial) return t + sum + wb + '<p class="manual">ออโต้บางส่วน — ยังมีสกิลของใบนี้อีก ' + c.miss + ' ข้อที่ไม่ทำงานอัตโนมัติเต็มรูปแบบ' + (c.asst ? ' (ในนั้น ' + c.asst + ' ข้อเป็นกึ่งออโต้: เกมเตือนจังหวะและหักคอสต์ให้ เอฟเฟกต์ทำเอง)' : '') + ' ข้อที่เหลือทำเองได้ด้วยปุ่ม <b>✋ ทำเอง</b> · ' + src + '</p>' + un;
-  if (c.beta && c.wiki) return t + wb + '<p class="betan">ออโต้ β (จาก wiki) — ใบนี้ไม่มีในรายการภาษาอังกฤษทางการ ระบบอ่านสกิลจากคำแปลใน wiki จึงมีโอกาสคลาดเคลื่อนมากกว่าใบอื่น ถ้าทำงานไม่ตรงกับการ์ดจริงให้บอก Claude · ' + src + '</p>' + un;
-  if (c.beta) return t + wb + '<p class="betan">ออโต้ β — ระบบอ่านสกิลใบนี้จากข้อความการ์ดเอง ยังไม่ได้ตรวจด้วยมือ ถ้าทำงานไม่ตรงกับการ์ดจริงให้บอก Claude · ' + src + '</p>' + un;
+  if (c.beta && c.wiki) return t + wb + '<p class="betan">ออโต้ β (จาก wiki) — ใบนี้ไม่มีในรายการภาษาอังกฤษทางการ ระบบอ่านสกิลจากคำแปลใน wiki จึงมีโอกาสคลาดเคลื่อนมากกว่าใบอื่น ถ้าทำงานไม่ตรงกับการ์ดจริง ใช้ ✋ ทำเอง แก้ได้ · ' + src + '</p>' + un;
+  if (c.beta) return t + wb + '<p class="betan">ออโต้ β — ระบบอ่านสกิลใบนี้จากข้อความการ์ดเอง ยังไม่ได้ตรวจด้วยมือ ถ้าทำงานไม่ตรงกับการ์ดจริง ใช้ ✋ ทำเอง แก้ได้ · ' + src + '</p>' + un;
   return t + wb + un;
 }
 /* where the card's real wording can be read: the official card page (Japanese list for this pool) and the wiki page (English) */
@@ -1240,8 +1242,8 @@ const Net = {
     this.clear();
     const code = Array.from({ length: 5 }, () => 'abcdefghjkmnpqrstuvwxyz23456789'[Math.floor(Math.random() * 31)]).join('');
     try {
-      await this.gdb.doc('rooms/' + code).set({ host: this.uid, hostDeck: VG.packDeck(VG.DECKS[deckId]), guest: null, guestDeck: null, seed: newSeed(), first: Math.random() < 0.5 ? 0 : 1, status: 'waiting', created: Date.now() });
-    } catch (e) { if (this.useRoom()) return this.create(deckId); return this.fail('สร้างห้องไม่สำเร็จ — เปิดหน้านี้ใน Claude ขณะลงชื่อเข้าใช้'); }
+      await this.gdb.doc('rooms/' + code).set({ host: this.uid, hostName: myName(), hostDeck: VG.packDeck(VG.DECKS[deckId]), guest: null, guestDeck: null, seed: newSeed(), first: Math.random() < 0.5 ? 0 : 1, status: 'waiting', created: Date.now() });
+    } catch (e) { if (this.useRoom()) return this.create(deckId); return this.fail(LOCAL ? 'สร้างห้องไม่สำเร็จ ลองอีกครั้ง' : 'สร้างห้องไม่สำเร็จ — เปิดหน้านี้ใน Claude ขณะลงชื่อเข้าใช้'); }
     const old = store.get('vg.rooms') || []; store.set('vg.rooms', [code]);
     $('#roomBox').hidden = false; $('#roomCode').textContent = code.toUpperCase(); setStatus('รอเพื่อนเข้าห้อง…');
     this.watch(code);
@@ -1264,7 +1266,7 @@ const Net = {
       const r = s.data();
       if (r.host !== this.uid && r.guest !== this.uid) {
         if (r.guest) return this.fail('ห้องนี้มีผู้เล่นครบแล้ว');
-        await ref.update({ guest: this.uid, guestDeck: VG.packDeck(VG.DECKS[deckId]), status: 'playing' });
+        await ref.update({ guest: this.uid, guestName: myName(), guestDeck: VG.packDeck(VG.DECKS[deckId]), status: 'playing' });
       }
     } catch (e) { if (this.useRoom()) return this.join(code, deckId); return this.fail('เข้าห้องไม่สำเร็จ — เจ้าของห้องต้องแชร์หน้านี้ให้คุณ (เชิญด้วยอีเมล)'); }
     setStatus('กำลังเข้าห้อง…');
@@ -1280,7 +1282,7 @@ const Net = {
   async begin(r) {
     const hd = VG.unpackDeck('room-host', r.hostDeck), gd = VG.unpackDeck('room-guest', r.guestDeck);
     if (!hd || !gd || !VG.inspectDeck(hd).playable || !VG.inspectDeck(gd).playable) return this.fail('เด็คในห้องนี้ใช้กับหน้าเวอร์ชันนี้ไม่ได้');
-    let names = ['เจ้าของห้อง', 'ผู้เข้าร่วม'];
+    let names = [String(r.hostName || '').slice(0, 16) || 'เจ้าของห้อง', String(r.guestName || '').slice(0, 16) || 'ผู้เข้าร่วม'];
     try { const ps = await this.user.profiles([r.host, r.guest]); names = [(ps[r.host] && ps[r.host].name) || names[0], (ps[r.guest] && ps[r.guest].name) || names[1]]; } catch (e) { /* names stay generic */ }
     S.mode = 'online'; S.seat = r.host === this.uid ? 0 : 1; S.meta = null;
     S.cfg = { seed: r.seed, first: r.first, players: [{ name: names[0], deck: hd }, { name: names[1], deck: gd }] };
@@ -1355,7 +1357,7 @@ const RoomStore = {
    On top of the channel sits a tiny replicated document store with the same shape as the published page's database, so the room code above works unchanged.
    Only moves travel through it; each side shows card pictures from its own machine. */
 const P2P = {
-  pc: null, ch: null, role: null, docs: {}, subs: [], open: false, store: null,
+  pc: null, ch: null, role: null, docs: {}, subs: [], open: false, store: null, viaQL: false, resume: false, await: false,
   b64(u8) { let s = ''; for (let i = 0; i < u8.length; i += 8192) s += String.fromCharCode.apply(null, u8.subarray(i, i + 8192)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); },
   unb64(t) { const s = atob(t.replace(/-/g, '+').replace(/_/g, '/')); const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; },
   async pack(o) {
@@ -1381,7 +1383,7 @@ const P2P = {
   },
   close() { const pc = this.pc; this.pc = null; this.open = false; this.docs = {}; this.subs = []; try { if (this.ch) this.ch.close(); } catch (e) { /* already closed */ } try { if (pc) pc.close(); } catch (e) { /* already closed */ } this.ch = null; },
   start(role) {
-    this.close(); this.role = role; this.store = this.mkStore();
+    this.close(); this.role = role; this.store = this.mkStore(); this.viaQL = false;
     const pc = this.pc = new RTCPeerConnection({ iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] }] });
     pc.addEventListener('connectionstatechange', () => {
       if (this.pc !== pc) return;
@@ -1397,55 +1399,239 @@ const P2P = {
   bind(ch) {
     this.ch = ch;
     ch.addEventListener('open', async () => {
-      if (this.ch !== ch) return; this.open = true;
-      Net.db = this.store; Net.gdb = this.store; Net.deckDb = false; Net.via = 'p2p'; Net.uid = this.role; Net.user = { id: async () => this.role, profiles: async () => ({}) }; Net.ready = true;
+      if (this.ch !== ch) return; this.open = true; this.netUp();
+      if (this.resume) { this.resume = false; ch.send(JSON.stringify({ sync: this.docs })); setStatus('ต่อกลับกับเพื่อนแล้ว — เล่นต่อได้'); if (!$('#table').hidden) logLine('ต่อกลับกับเพื่อนแล้ว — เล่นต่อจากเดิม', 't'); return; }
+      if (this.await) {   // reopened a room after closing the game: wait for the friend's copy of the fight; nothing comes → a new fight
+        setStatus('เชื่อมต่อแล้ว กำลังกู้ไฟท์เดิม…');
+        setTimeout(async () => { if (this.ch !== ch || !this.await) return; this.await = false; if (this.role === 'host') { setStatus('ไม่มีไฟท์เดิมให้กู้ — เริ่มไฟท์ใหม่'); await Net.create(S.decks[0]); if (Net.code && ch.readyState === 'open') ch.send(JSON.stringify({ room: Net.code })); } }, 4000);
+        return;
+      }
       setStatus('เชื่อมต่อกับเพื่อนแล้ว กำลังเริ่มไฟท์…');
       if (this.role === 'host') { await Net.create(S.decks[0]); if (Net.code && ch.readyState === 'open') ch.send(JSON.stringify({ room: Net.code })); }
     });
     ch.addEventListener('message', e => {
       let m; try { m = JSON.parse(e.data); } catch (x) { return; }
-      if (!m || typeof m !== 'object') return;
-      if (typeof m.room === 'string' && this.role === 'guest' && /^[a-z0-9]{5}$/.test(m.room)) { Net.join(m.room, S.decks[0]); return; }
+      if (!m || typeof m !== 'object' || this.ch !== ch) return; this.netUp();
+      if (m.sync && typeof m.sync === 'object' && String(e.data).length < 400000) { this.merge(m.sync); return; }
+      if (typeof m.room === 'string' && this.role === 'guest' && /^[a-z0-9]{5}$/.test(m.room)) { this.await = false; if (Net.code !== m.room) Net.join(m.room, S.decks[0]); return; }
       if (typeof m.p === 'string' && /^rooms\/[a-z0-9]{5}(\/log\/p[01])?$/.test(m.p) && String(e.data).length < 200000) this.write(m.p, m.v, true);
     });
-    ch.addEventListener('close', () => { if (this.ch === ch && this.open) { this.open = false; Net.fail('การเชื่อมต่อกับเพื่อนหลุด — ต้องสร้างรหัสและเชื่อมต่อใหม่'); } });
+    ch.addEventListener('close', () => { if (this.ch === ch && this.open) { this.open = false; if (this.viaQL && QL.code && (Net.started || Net.code)) QL.lost(); else Net.fail('การเชื่อมต่อกับเพื่อนหลุด — ต้องสร้างรหัสและเชื่อมต่อใหม่'); } });
+  },
+  netUp() { if (Net.db === this.store && Net.ready) return; Net.db = this.store; Net.gdb = this.store; Net.deckDb = false; Net.via = 'p2p'; Net.uid = this.role; Net.user = { id: async () => this.role, profiles: async () => ({}) }; Net.ready = true; },
+  /* the other side's copy of the room after a reconnect: take whatever is newer (answer logs only grow), send back what they miss */
+  merge(docs) {
+    let room = null; const ok = p => /^rooms\/[a-z0-9]{5}(\/log\/p[01])?$/.test(p); const len = v => v && Array.isArray(v.a) ? v.a.length : -1;
+    for (const p in docs) {
+      if (!ok(p)) continue; const v = docs[p];
+      if (p.includes('/log/')) { if (len(v) > len(this.docs[p])) this.write(p, v, true); }
+      else { room = p; if (!this.docs[p] && v && typeof v === 'object') this.write(p, v, true); }
+    }
+    for (const p in this.docs) if (ok(p) && (p.includes('/log/') ? len(this.docs[p]) > len(docs[p]) : !docs[p]) && this.ch && this.ch.readyState === 'open') this.ch.send(JSON.stringify({ p, v: this.docs[p] }));
+    this.await = false;
+    if (room && !Net.code) Net.join(room.split('/')[1], S.decks[0]);
+    setStatus('ต่อกลับกับเพื่อนแล้ว — เล่นต่อได้');
   },
 };
 /* ================= quick room: a 6-character code instead of the long connection texts =================
    The two game windows find each other through the free PeerJS meeting service (it only passes the connection handshake; the game itself
    travels window to window, and PeerJS's relay steps in when two networks cannot reach each other directly). The connection then feeds
    the same replicated store as the long-code link above, so the room, the answer logs and the game run unchanged. */
+/* ===== online rooms of the game: no account, no Claude =====
+   A room has a 6-letter code. Players link directly (PeerJS / WebRTC); when a network blocks that, the same messages go through a public MQTT broker (relay).
+   The broker also carries the list of open rooms (retained message per room, cleared by the broker if the host's game closes).
+   A dropped link is retried by itself and the game continues: both sides keep the room and the answer logs and swap them when they meet again. */
+const MQP = 'vgdl/v1/';
+const MQ = {
+  urls() { const u = store.get('vg.mqtt'); return Array.isArray(u) && u.length ? u : ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.com:8884/mqtt', 'wss://test.mosquitto.org:8081/mqtt']; },
+  /* a connected client from the first broker that answers */
+  conn(will) {
+    const urls = this.urls(); let i = 0;
+    return new Promise((res, rej) => {
+      const next = () => {
+        if (!window.mqtt) return rej(new Error('no mqtt'));
+        if (i >= urls.length) return rej(new Error('no broker'));
+        const url = urls[i++]; let done = false; let c;
+        try { c = window.mqtt.connect(url, { clientId: 'vgdl_' + Math.random().toString(36).slice(2, 12), connectTimeout: 7000, reconnectPeriod: 0, keepalive: 20, clean: true, will }); } catch (e) { return next(); }
+        const t = setTimeout(() => { if (done) return; done = true; try { c.end(true); } catch (e) { /* gone */ } next(); }, 8000);
+        c.once('connect', () => { if (done) return; done = true; clearTimeout(t); c.options.reconnectPeriod = 2500; c.vgUrl = url; c.setMaxListeners && c.setMaxListeners(50); res(c); });
+        c.once('error', () => { if (done) return; done = true; clearTimeout(t); try { c.end(true); } catch (e) { /* gone */ } next(); });
+      };
+      next();
+    });
+  },
+  /* a channel through the broker, shaped like an RTCDataChannel for P2P.bind */
+  relay(c, code, me, gid) {
+    const H = { open: [], message: [], close: [] }; let st = 'connecting'; let seen = Date.now();
+    const fire = (t, e) => { for (const f of H[t].slice()) { try { f(e); } catch (x) { /* one listener */ } } };
+    const out = MQP + 'r/' + code + '/' + me, inT = MQP + 'r/' + code + '/' + (me === 'h' ? 'g' : 'h');
+    const end = () => { if (st === 'closed') return; const was = st; st = 'closed'; clearInterval(beat); c.removeListener('message', onMsg); c.removeListener('offline', onOff); if (was === 'open') fire('close', {}); };
+    const onMsg = (t, buf) => {
+      if (t !== inT) return; let m; try { m = JSON.parse(String(buf)); } catch (e) { return; }
+      if (!m || m.g !== gid) return; seen = Date.now();
+      if (m.k === 'm' && st === 'open' && typeof m.x === 'string') fire('message', { data: m.x });
+      else if (m.k === 'bye') end();
+    };
+    const onOff = () => setTimeout(() => { if (!c.connected) end(); }, 6000);   // our own internet went away
+    const pub = o => { try { c.publish(out, JSON.stringify(o), { qos: 1 }); } catch (e) { /* offline: the broker client queues or drops */ } };
+    const beat = setInterval(() => { if (st !== 'open') return; pub({ k: 'p', g: gid }); if (Date.now() - seen > 25000) end(); }, 5000);   // the other side vanished without saying goodbye
+    c.on('message', onMsg); c.on('offline', onOff);
+    return {
+      g: gid,
+      addEventListener(t, f) { if (t === 'open' && st === 'open') queueMicrotask(() => f({})); else if (H[t]) H[t].push(f); },
+      send(x) { pub({ k: 'm', g: gid, x }); },
+      close() { if (st === 'closed') return; pub({ k: 'bye', g: gid }); end(); },
+      get readyState() { return st; },
+      _open() { if (st !== 'connecting') return; st = 'open'; seen = Date.now(); fire('open', {}); },
+    };
+  },
+};
+/* the list of open rooms (shown on the LINK FIGHT page) */
+const Rooms = {
+  c: null, busy: false, rooms: {}, timer: 0, want: false,
+  async start() {
+    this.want = true; if (this.c || this.busy) return this.draw(); this.busy = true; this.draw();
+    try {
+      const c = await MQ.conn(); this.busy = false;
+      if (!this.want) { c.end(true); return; }
+      this.c = c; const sub = () => c.subscribe(MQP + 'lobby/+', { qos: 0 });
+      c.on('connect', sub); sub();
+      c.on('message', (t, buf) => {
+        const code = t.split('/').pop(); if (!/^[A-Z2-9]{6}$/.test(code)) return;
+        let o = null; try { o = buf.length ? JSON.parse(String(buf)) : null; } catch (e) { o = null; }
+        if (!o || typeof o !== 'object' || Math.abs(Date.now() - (+o.t || 0)) > 15 * 60e3) delete this.rooms[code];
+        else this.rooms[code] = { n: String(o.n || '').slice(0, 16), d: String(o.d || '').slice(0, 40), seen: Date.now() };
+        this.draw();
+      });
+      this.timer = setInterval(() => this.draw(), 20000);
+    } catch (e) { this.busy = false; this.fail = true; }
+    this.draw();
+  },
+  stop() { this.want = false; clearInterval(this.timer); this.timer = 0; if (this.c) { try { this.c.end(true); } catch (e) { /* gone */ } } this.c = null; this.rooms = {}; },
+  draw() {
+    const el = $('#qlList'); if (!el) return;
+    const now = Date.now(); const list = Object.keys(this.rooms).filter(k => k !== QL.code && now - this.rooms[k].seen < 4 * 60e3).sort((a, b) => this.rooms[b].seen - this.rooms[a].seen);
+    $('#qlCount').textContent = this.c ? (list.length ? list.length + ' ห้อง' : '') : '';
+    if (!this.c) { el.innerHTML = '<p class="note">' + (this.busy ? 'กำลังโหลดรายการห้อง…' : 'โหลดรายการห้องไม่ได้ตอนนี้ — ยังเข้าห้องด้วยรหัสได้') + '</p>'; return; }
+    el.innerHTML = list.length ? list.map(k => { const r = this.rooms[k]; return '<div class="qlr"><div class="qlr-t"><b>' + esc(r.n || 'ไม่ระบุชื่อ') + '</b><span>' + esc(r.d) + '</span></div><code>' + k + '</code><button type="button" class="ghost strong" data-qlj="' + k + '">เข้าห้อง</button></div>'; }).join('')
+      : '<p class="note">ยังไม่มีห้องเปิดรอ — กด <b>สร้างห้อง</b> แล้วให้เพื่อนกดเข้าจากรายการนี้</p>';
+  },
+};
 const QL = {
-  peer: null, code: null,
+  peer: null, mq: null, code: null, role: null, gid: null, tryN: 0, linked: false, rejoin: false, everLinked: false, advT: 0, retryT: 0, lostT: 0,
   cfg() { const h = store.get('vg.peerHost'); return h && typeof h === 'object' ? Object.assign({}, h) : {}; },
+  active() { return !!(this.code && P2P.viaQL); },
   adapt(conn) {
     const H = { open: [], message: [], close: [] }; const fire = (t, e) => { for (const f of H[t].slice()) { try { f(e); } catch (x) { /* one listener */ } } };
-    conn.on('open', () => fire('open', {})); conn.on('data', d => fire('message', { data: typeof d === 'string' ? d : JSON.stringify(d) })); conn.on('close', () => fire('close', {})); conn.on('error', () => fire('close', {}));
-    return { addEventListener: (t, f) => { if (H[t]) H[t].push(f); }, send: x => conn.send(x), close: () => { try { conn.close(); } catch (e) { /* already closed */ } }, get readyState() { return conn.open ? 'open' : 'connecting'; } };
+    let closed = false; const shut = () => { if (closed) return; closed = true; fire('close', {}); };
+    conn.on('open', () => fire('open', {})); conn.on('data', d => fire('message', { data: typeof d === 'string' ? d : JSON.stringify(d) })); conn.on('close', shut); conn.on('error', shut);
+    try { const pc = conn.peerConnection; if (pc) pc.addEventListener('connectionstatechange', () => { if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') setTimeout(() => { if (pc.connectionState !== 'connected') shut(); }, pc.connectionState === 'failed' ? 0 : 5000); }); } catch (e) { /* no state events */ }
+    return { addEventListener: (t, f) => { if (t === 'open' && conn.open) queueMicrotask(() => f({})); else if (H[t]) H[t].push(f); }, send: x => { try { conn.send(x); } catch (e) { shut(); } }, close: () => { closed = true; try { conn.close(); } catch (e) { /* already closed */ } }, get readyState() { return closed ? 'closed' : conn.open ? 'open' : 'connecting'; } };
   },
-  attach(conn, role) { P2P.close(); P2P.role = role; P2P.store = P2P.mkStore(); P2P.bind(this.adapt(conn)); },
-  drop() { if (this.peer) { try { this.peer.destroy(); } catch (e) { /* gone */ } } this.peer = null; this.code = null; },
+  /* put a fresh link under the room; if a game is running in this room already, keep it and catch up instead */
+  attach(ch, role) {
+    this.linked = true; clearTimeout(this.lostT); clearTimeout(this.retryT);
+    if (P2P.store && P2P.viaQL && Net.started && P2P.role === role) { const old = P2P.ch; P2P.ch = null; try { if (old && old !== ch) old.close(); } catch (e) { /* gone */ } P2P.resume = true; P2P.bind(ch); return; }
+    P2P.close(); P2P.role = role; P2P.store = P2P.mkStore(); P2P.viaQL = true; P2P.await = this.rejoin || role === 'guest' && this.rejoinGuest; P2P.bind(ch);
+    this.everLinked = true; this.advert(); store.set('vg.qlLast', { code: this.code, role, t: Date.now() });
+  },
+  lobbyT(code) { return MQP + 'lobby/' + code; },
+  advert() {
+    if (!this.mq || this.role !== 'host' || !this.code) return;
+    const show = !!($('#qlPub') && $('#qlPub').checked) && !this.rejoin && !this.everLinked; const d = VG.DECKS[S.decks[0]];
+    try { this.mq.publish(this.lobbyT(this.code), show ? JSON.stringify({ n: myName(), d: d ? d.name : '', t: Date.now(), v: 1 }) : '', { qos: 1, retain: true }); } catch (e) { /* offline */ }
+  },
+  drop() {
+    clearTimeout(this.retryT); clearTimeout(this.lostT); clearInterval(this.advT); this.tryN++; this.linked = false;
+    if (this.mq) { const c = this.mq; this.mq = null; try { if (this.role === 'host' && this.code) c.publish(this.lobbyT(this.code), '', { qos: 1, retain: true }); } catch (e) { /* offline */ } setTimeout(() => { try { c.end(); } catch (e) { /* gone */ } }, 400); }
+    if (this.peer) { try { this.peer.destroy(); } catch (e) { /* gone */ } } this.peer = null; this.code = null;
+  },
   newCode() { return Array.from({ length: 6 }, () => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 31)]).join(''); },
-  err(e) { const t = e && e.type; return t === 'peer-unavailable' ? 'ไม่พบห้องนี้ — ตรวจรหัส หรือให้เพื่อนกดสร้างห้องใหม่' : t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed' ? 'ต่อบริการห้องด่วนไม่ได้ — ตรวจอินเทอร์เน็ต หรือใช้วิธีแลกรหัสยาวด้านล่าง' : t === 'browser-incompatible' ? 'โปรแกรมนี้เชื่อมตรงไม่ได้' : 'เชื่อมต่อไม่สำเร็จ (' + (t || 'ไม่ทราบสาเหตุ') + ')'; },
-  host(tries) {
-    if (!window.Peer) return setStatus('ไฟล์เกมนี้ไม่มีระบบห้องด่วน — ใช้วิธีแลกรหัสยาว', true);
-    this.drop(); const code = this.newCode(); setStatus('กำลังสร้างห้อง…');
-    const peer = this.peer = new window.Peer('vgdl-' + code.toLowerCase(), this.cfg());
-    peer.on('open', () => { if (this.peer !== peer) return; this.code = code; $('#qlCode').textContent = code; $('#qlCode').hidden = false; $('#qlCopy').hidden = false; setStatus('ส่งรหัส ' + code + ' ให้เพื่อน แล้วรอเพื่อนเข้าห้อง…'); });
-    peer.on('connection', conn => { if (this.peer !== peer) return; if (P2P.open) { conn.on('open', () => conn.close()); return; } setStatus('เพื่อนกำลังเข้าห้อง…'); this.attach(conn, 'host'); });
-    peer.on('error', e => { if (this.peer !== peer) return; if (e && e.type === 'unavailable-id' && (tries || 0) < 4) return this.host((tries || 0) + 1); if (!P2P.open) setStatus(this.err(e), true); });
+  host(opts) {
+    opts = opts || {}; this.drop(); const code = opts.code || this.newCode(); const my = this.tryN;
+    this.code = code; this.role = 'host'; this.rejoin = !!opts.code; this.everLinked = false; this.rejoinGuest = false;
+    setStatus(this.rejoin ? 'กำลังเปิดห้อง ' + code + ' อีกครั้ง…' : 'กำลังสร้างห้อง…');
+    let shown = false; let paths = 0, failed = 0;
+    const ready = () => { if (shown || this.tryN !== my) return; shown = true; $('#qlCode').textContent = code; $('#qlCode').hidden = false; $('#qlCopy').hidden = false; setStatus(this.rejoin ? 'รอเพื่อนกลับเข้าห้อง ' + code + '…' : 'ส่งรหัส ' + code + ' ให้เพื่อน หรือให้เพื่อนกดเข้าจากรายการห้อง แล้วรอ…'); store.set('vg.qlLast', { code, role: 'host', t: Date.now() }); Rooms.draw(); };
+    const bad = () => { if (++failed >= paths && !shown && this.tryN === my) setStatus('ต่ออินเทอร์เน็ตไม่ได้ — ตรวจเน็ตแล้วกดสร้างห้องอีกครั้ง', true); };
+    if (window.Peer) {
+      paths++;
+      const peer = this.peer = new window.Peer('vgdl-' + code.toLowerCase(), this.cfg());
+      peer.on('open', () => { if (this.peer === peer) ready(); });
+      peer.on('connection', conn => { if (this.peer !== peer) return; if (P2P.open) { conn.on('open', () => conn.close()); return; } setStatus('เพื่อนกำลังเข้าห้อง…'); this.attach(this.adapt(conn), 'host'); });
+      peer.on('disconnected', () => { if (this.peer === peer) setTimeout(() => { try { if (this.peer === peer && peer.disconnected && !peer.destroyed) peer.reconnect(); } catch (e) { /* retried on the next drop */ } }, 2000); });
+      peer.on('error', e => { if (this.peer !== peer) return; if (e && e.type === 'unavailable-id' && !this.rejoin && !shown && !this.everLinked) return this.host(); if (!shown) bad(); });
+    }
+    if (window.mqtt) {
+      paths++;
+      MQ.conn({ topic: this.lobbyT(code), payload: '', qos: 1, retain: true }).then(c => {
+        if (this.tryN !== my) { try { c.end(true); } catch (e) { /* gone */ } return; }
+        this.mq = c; const gT = MQP + 'r/' + code + '/g', hT = MQP + 'r/' + code + '/h';
+        c.on('connect', () => { c.subscribe(gT, { qos: 1 }); this.advert(); });
+        c.subscribe(gT, { qos: 1 });
+        c.on('message', (t, buf) => {
+          if (t !== gT) return; let m; try { m = JSON.parse(String(buf)); } catch (e) { return; }
+          if (!m || m.k !== 'hi' || typeof m.g !== 'string' || m.g.length > 40) return;
+          const cur = P2P.viaQL && P2P.ch && P2P.ch.g === m.g && P2P.ch.readyState === 'open';
+          if (cur) { c.publish(hT, JSON.stringify({ k: 'ok', g: m.g }), { qos: 1 }); return; }
+          if (P2P.open) { c.publish(hT, JSON.stringify({ k: 'full', g: m.g }), { qos: 1 }); return; }
+          setStatus('เพื่อนกำลังเข้าห้อง…');
+          const ch = MQ.relay(c, code, 'h', m.g); this.attach(ch, 'host'); c.publish(hT, JSON.stringify({ k: 'ok', g: m.g }), { qos: 1 }); ch._open();
+        });
+        this.advert(); this.advT = setInterval(() => this.advert(), 60000); ready();
+      }, bad);
+    }
+    if (!paths) setStatus('ไฟล์เกมนี้ไม่มีระบบห้องออนไลน์ — ใช้วิธีแลกรหัสยาว', true);
   },
-  join(raw) {
-    if (!window.Peer) return setStatus('ไฟล์เกมนี้ไม่มีระบบห้องด่วน — ใช้วิธีแลกรหัสยาว', true);
+  join(raw, opts) {
+    opts = opts || {};
     const code = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); if (code.length !== 6) return setStatus('รหัสห้องมี 6 ตัว', true);
-    this.drop(); setStatus('กำลังเข้าห้อง ' + code + '…');
-    const peer = this.peer = new window.Peer('vgdl-g' + Math.random().toString(36).slice(2, 12), this.cfg());
-    peer.on('open', () => { if (this.peer !== peer) return; const conn = peer.connect('vgdl-' + code.toLowerCase(), { reliable: true, serialization: 'raw' }); this.attach(conn, 'guest'); });
-    peer.on('error', e => { if (this.peer !== peer) return; setStatus(this.err(e), true); });
+    if (!window.Peer && !window.mqtt) return setStatus('ไฟล์เกมนี้ไม่มีระบบห้องออนไลน์ — ใช้วิธีแลกรหัสยาว', true);
+    this.drop(); const my = this.tryN; this.code = code; this.role = 'guest'; this.rejoin = false; this.rejoinGuest = !!opts.rejoin;
+    if (!opts.resume || !this.gid) this.gid = 'g' + Math.random().toString(36).slice(2, 12);
+    if (!opts.resume) setStatus('กำลังเข้าห้อง ' + code + '…');
+    const finish = ch => { if (this.tryN !== my || this.linked) { try { ch.close(); } catch (e) { /* gone */ } return; } this.attach(ch, 'guest'); };
+    let relayOn = false, noRoom = 0, full = false;
+    const relay = () => {
+      if (relayOn || this.linked || this.tryN !== my) return; relayOn = true;
+      if (!window.mqtt) { noRoom++; return; }
+      MQ.conn().then(c => {
+        if (this.tryN !== my || this.linked) { try { c.end(true); } catch (e) { /* gone */ } return; }
+        this.mq = c; const hT = MQP + 'r/' + code + '/h', gT = MQP + 'r/' + code + '/g'; const gid = this.gid;
+        const ch = MQ.relay(c, code, 'g', gid);
+        c.on('message', (t, buf) => { if (t !== hT) return; let m; try { m = JSON.parse(String(buf)); } catch (e) { return; } if (!m || m.g !== gid) return; if (m.k === 'ok' && !this.linked) { finish(ch); ch._open(); } else if (m.k === 'full') full = true; });
+        c.subscribe(hT, { qos: 1 }, () => { let n = 0; const hi = () => { if (this.linked || this.tryN !== my || n++ > 6) return; try { c.publish(gT, JSON.stringify({ k: 'hi', g: gid }), { qos: 1 }); } catch (e) { /* offline */ } setTimeout(hi, 2000); }; hi(); });
+      }, () => { noRoom++; });
+    };
+    if (window.Peer) {
+      const peer = this.peer = new window.Peer('vgdl-' + this.gid + Math.random().toString(36).slice(2, 5), this.cfg());
+      peer.on('open', () => { if (this.peer !== peer) return; const conn = peer.connect('vgdl-' + code.toLowerCase(), { reliable: true, serialization: 'raw' }); const ad = this.adapt(conn); ad.addEventListener('open', () => finish(ad)); });
+      peer.on('error', e => { if (this.peer !== peer) return; if (e && e.type === 'peer-unavailable') noRoom++; relay(); });
+      setTimeout(relay, 5000);
+    } else relay();
+    if (!opts.resume) setTimeout(() => { if (this.tryN === my && !this.linked) setStatus(full ? 'ห้องนี้มีผู้เล่นครบแล้ว' : noRoom ? 'ไม่พบห้อง ' + code + ' — ตรวจรหัส หรือให้เพื่อนกดสร้างห้องใหม่' : 'เข้าห้องไม่สำเร็จ — ตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง', true); }, 18000);
+  },
+  /* the link dropped during a game: try again by ourselves, the game goes on from where it was */
+  lost() {
+    P2P.open = false; this.linked = false; const t0 = Date.now();
+    setStatus('การเชื่อมต่อหลุด — กำลังต่อกลับเอง…', true); if (!$('#table').hidden) logLine('การเชื่อมต่อกับเพื่อนหลุด — กำลังต่อกลับเอง (เล่นต่อได้เมื่อต่อติด)', 't');
+    const give = () => { if (!P2P.open && this.code) Net.fail('ต่อกลับไม่สำเร็จภายใน 3 นาที — ให้เจ้าของห้องกด "กลับเข้าห้องล่าสุด" แล้วอีกฝั่งกดตามเพื่อเล่นต่อ'); };
+    if (this.role === 'guest') {
+      const code = this.code;
+      const again = () => { if (P2P.open || this.role !== 'guest') return; if (Date.now() - t0 > 180000) return give(); this.join(code, { resume: true }); this.retryT = setTimeout(again, 15000); };
+      again();
+    } else {
+      try { if (this.peer && this.peer.disconnected && !this.peer.destroyed) this.peer.reconnect(); } catch (e) { /* the peer retries on its own */ }
+      this.lostT = setTimeout(give, 180000);
+    }
   },
 };
 function p2pWire() {
-  $('#qlHost').addEventListener('click', () => QL.host(0));
+  $('#qlHost').addEventListener('click', () => QL.host());
+  $('#qlName').value = myName(); $('#qlName').addEventListener('input', e => { store.set('vg.name', e.target.value.trim().slice(0, 16)); });
+  $('#qlPub').addEventListener('change', () => QL.advert());
+  $('#qlList').addEventListener('click', e => { const b = e.target.closest('[data-qlj]'); if (b) QL.join(b.dataset.qlj); });
+  $('#qlBack').addEventListener('click', () => { const l = store.get('vg.qlLast'); if (!l || !l.code) return; if (l.role === 'host') QL.host({ code: l.code }); else QL.join(l.code, { rejoin: true }); });
   $('#qlJoin').addEventListener('click', () => QL.join($('#qlIn').value));
   $('#qlIn').addEventListener('keydown', e => { if (e.key === 'Enter') QL.join($('#qlIn').value); });
   $('#qlCopy').addEventListener('click', e => { const b = e.currentTarget; const t = QL.code || ''; const done = () => { b.textContent = 'คัดลอกแล้ว ✓'; setTimeout(() => { b.textContent = 'คัดลอกรหัส'; }, 1400); }; try { navigator.clipboard.writeText(t).then(done, done); } catch (x) { done(); } });
@@ -1460,7 +1646,7 @@ function p2pWire() {
   $('#p2pCopyA').addEventListener('click', e => copy('#p2pAns', e.currentTarget));
   role('host');
 }
-function p2pReset() { P2P.close(); QL.drop(); if ($('#qlCode')) { $('#qlCode').hidden = true; $('#qlCopy').hidden = true; } for (const id of ['#p2pOffer', '#p2pAnsIn', '#p2pOfferIn', '#p2pAns']) $(id).value = ''; $('#p2pHost2').hidden = true; $('#p2pGuest2').hidden = true; }
+function p2pReset() { P2P.close(); P2P.viaQL = false; QL.drop(); if ($('#qlCode')) { $('#qlCode').hidden = true; $('#qlCopy').hidden = true; } for (const id of ['#p2pOffer', '#p2pAnsIn', '#p2pOfferIn', '#p2pAns']) $(id).value = ''; $('#p2pHost2').hidden = true; $('#p2pGuest2').hidden = true; }
 
 /* ================= my decks (this browser + the signed-in account) ================= */
 const My = {
@@ -1651,7 +1837,7 @@ const Lobby = {
     this.size(); if (this.g) requestAnimationFrame(t => this.frame(t));
     this.opening(); this.tip();
   },
-  tips: ['ระหว่างเล่น กด ✋ ทำเอง ได้ทุกเมื่อที่เป็นตาคุณ เพื่อทำสกิลที่ยังไม่ออโต้ด้วยมือ', 'โหมด SOLO FIGHT ย้อนกลับได้ทีละการตัดสินใจ เหมาะกับการลองไลน์เล่นซ้ำๆ', 'กด ดูการ์ด ที่เด็คเพื่อดูว่าใบไหนออโต้ครบ ออโต้บางส่วน หรือยังต้องทำเอง', 'DECK EDIT ค้นหาได้ทั้งชื่ออังกฤษ ชื่อญี่ปุ่น และเลขการ์ด', 'เพอร์โซน่าไรด์: ไรด์ใบชื่อเดียวกับแวนการ์ดเกรด 3 แถวหน้าพลัง +10000 และจั่ว 1 ใบ', 'ส่งรหัส Deck Log ให้ Claude ในแชต เด็คจะถูกเพิ่มเข้ามาให้'],
+  tips: ['ระหว่างเล่น กด ✋ ทำเอง ได้ทุกเมื่อที่เป็นตาคุณ เพื่อทำสกิลที่ยังไม่ออโต้ด้วยมือ', 'โหมด SOLO FIGHT ย้อนกลับได้ทีละการตัดสินใจ เหมาะกับการลองไลน์เล่นซ้ำๆ', 'กด ดูการ์ด ที่เด็คเพื่อดูว่าใบไหนออโต้ครบ ออโต้บางส่วน หรือยังต้องทำเอง', 'DECK EDIT ค้นหาได้ทั้งชื่ออังกฤษ ชื่อญี่ปุ่น และเลขการ์ด', 'เพอร์โซน่าไรด์: ไรด์ใบชื่อเดียวกับแวนการ์ดเกรด 3 แถวหน้าพลัง +10000 และจั่ว 1 ใบ', 'จัดเด็คของตัวเองได้ที่ MY DECKS แล้วใช้ในห้องออนไลน์กับเพื่อนได้เลย'],
   tip() { const el = $('#lbTip'); if (!el) return; let i = Math.floor(Math.random() * this.tips.length); const show = () => { el.textContent = this.tips[i % this.tips.length]; el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; i++; }; show(); if (!this.still) setInterval(() => { if (!$('#lobby').hidden) show(); }, 7000); },
   /* side sheet: 'opt' (card pictures) / 'help' / null to close */
   drawer(name) {
@@ -1736,6 +1922,7 @@ function boot() {
   const dk = store.get('vg.decks'); if (Array.isArray(dk) && VG.DECKS[dk[0]] && VG.DECKS[dk[1]]) S.decks = dk;
   if (LOCAL) {   // the copy on the owner's disk: no online rooms; automatic card pictures
     { const ob = $('#modeSeg [data-mode="online"]'); if (ob) ob.querySelector('small').textContent = 'เชื่อมตรงกับเครื่องเพื่อน ด้วยรหัสห้อง 6 ตัว'; }
+    document.documentElement.classList.add('vg-local');
     $('#roomPanel').hidden = true; $('#p2pPanel').hidden = false; $('#p2pPanel').appendChild($('#onStatus')); p2pWire();
     $('#autoBox').hidden = false; $('#imgBase').value = imgBase(); $('#imgWeb').checked = webOn(); $('#imgJp').checked = jpOn();
     $('#imgJp').addEventListener('change', e => { store.set('vg.imgJp', e.target.checked); autoReset(); });
@@ -1748,6 +1935,6 @@ function boot() {
   wire(); renderLobby(); loadImages();
   My.sync();
 }
-window.VGUI = { S, Net, My, P2P, QL, newLocal, submit, undo, renderLobby, store, esc, statLine, fmtText, cardNote, staticCard, tagOf, imgFor, $, openCard, closeCard, CW, Sfx };
+window.VGUI = { S, Net, My, P2P, QL, Rooms, MQ, newLocal, submit, undo, renderLobby, store, esc, statLine, fmtText, cardNote, staticCard, tagOf, imgFor, $, openCard, closeCard, CW, Sfx };
 boot();
 })();

@@ -1042,3 +1042,17 @@ p.manual a, p.betan a, .bd-list a, .irow a { color: var(--cyan); }
 }
 .stage-port #side { overflow: hidden; }
 .stage-port #detail { max-height: 100%; overflow: hidden; align-items: flex-start; }
+
+/* ---- V63 online rooms: room list, player name ---- */
+.vg-local .webonly { display: none !important; }
+.qlname { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--dim); }
+.qlname input { background: rgba(0, 0, 0, .3); border: 1px solid var(--line); border-radius: 8px; color: inherit; font: inherit; padding: 7px 10px; width: min(220px, 60vw); }
+.qllobby { margin-top: 12px; border-top: 1px solid color-mix(in srgb, var(--line) 60%, transparent); padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.qll-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.qll-h b { font-family: var(--f-display); letter-spacing: .04em; }
+.qllist { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow: auto; }
+.qlr { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: rgba(10, 16, 40, .55); }
+.qlr-t { display: flex; flex-direction: column; min-width: 0; }
+.qlr-t b, .qlr-t span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qlr-t span { font-size: 12px; color: var(--dim); }
+.qlr code { font-family: var(--f-display); font-weight: 700; letter-spacing: .12em; color: var(--gold); }

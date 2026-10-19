@@ -6,7 +6,7 @@ on:
 jobs:
   quickroom:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,4 +32,14 @@ jobs:
           cat out.txt
           msg=$(tail -c 3500 out.txt | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
           echo "::notice title=quickroom result::$msg"
+          exit $code
+      - name: Room list + relay through the real public MQTT brokers (no Claude, no account)
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          CLOUD=1 PW=/tmp/pw/node_modules/playwright/index.mjs node test/rooms.mjs list,relay > rooms.txt 2>&1; code=$?
+          cat rooms.txt
+          msg=$(tail -c 3500 rooms.txt | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
+          echo "::notice title=rooms result::$msg"
           exit $code
