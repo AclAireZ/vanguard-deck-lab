@@ -161,7 +161,7 @@ function autoWarm(g) { if (!LOCAL) return; const seen = new Set(); for (const k 
 /* ---- card back ----
    The drawn back is the game's own. The owner can use a picture of their own instead: an imported file named "back", a file cards/back.png|jpg|webp beside the local copy,
    or (local copy) an image address typed into the settings. */
-function setBack(url) { document.documentElement.style.setProperty('--cbimg', url ? 'url("' + String(url).replace(/["\\\n]/g, '') + '")' : 'none'); document.body.classList.toggle('has-back', !!url); }
+function setBack(url) { document.documentElement.style.setProperty('--cbimg', url ? 'url("' + String(url).replace(/["\\\n]/g, '') + '")' : 'none'); document.body.classList.toggle('has-back', !!url); const pv = document.getElementById('backPrev'); if (pv) pv.classList.toggle('img', !!url); }
 function findBack() {
   if (IMG.back || IMG.cardback) return setBack(IMG.back || IMG.cardback);
   if (!LOCAL) return setBack('');
@@ -222,6 +222,7 @@ function renderLobby() {
   $('#stageMode').textContent = { solo: 'SOLO FIGHT', bot: 'VS CPU', online: 'LINK FIGHT' }[S.mode] || '';
   { const l = store.get('vg.lastRoom'); const ok = online && l && l.code && Date.now() - (l.t || 0) < 12 * 3600e3; $('#rejoinBtn').hidden = !ok; if (ok) $('#rejoinBtn').textContent = 'กลับเข้าห้องล่าสุด ' + l.code.toUpperCase(); }
   if (LOCAL) { if (online) Rooms.start(); else Rooms.stop(); const l = store.get('vg.qlLast'); const ok = online && l && /^[A-Z2-9]{6}$/.test(l.code || '') && Date.now() - (l.t || 0) < 12 * 3600e3; $('#qlBack').hidden = !ok; if (ok) $('#qlBack').textContent = 'กลับเข้าห้องล่าสุด ' + l.code; }
+  { const st = document.querySelector('.lb-stage'); if (st) st.classList.toggle('is-online', online); }
   $('#firstSec').hidden = online; $('#onlineSec').hidden = !online; $('#p2pSec').hidden = !online; $('#goRow').hidden = online;
   const sv = store.get('vg.save');
   $('#resumeBtn').hidden = !(sv && VG.DECKS[sv.decks[0]] && VG.DECKS[sv.decks[1]] && sv.history && sv.history.length);
@@ -1155,6 +1156,8 @@ function wire() {
   $('#joinBtn').addEventListener('click', () => Net.join($('#codeIn').value.trim().toLowerCase(), S.decks[0]));
   $('#rejoinBtn').addEventListener('click', () => { const l = store.get('vg.lastRoom'); if (l && l.code) Net.join(l.code, S.decks[0]); });
   $('#imgIn').addEventListener('change', e => { addImages(e.target.files); e.target.value = ''; });
+  $('#backIn').addEventListener('change', async e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; const blob = await shrink(f); if (IMG.back) URL.revokeObjectURL(IMG.back); else IMGN++; IMG.back = URL.createObjectURL(blob); try { await idb.put('back', blob); } catch (x) { /* this visit only */ } findBack(); imgStatus('ตั้งรูปหลังการ์ดแล้ว'); });
+  $('#backReset').addEventListener('click', async () => { for (const k of ['back', 'cardback']) if (IMG[k]) { URL.revokeObjectURL(IMG[k]); delete IMG[k]; IMGN--; try { await idb.del(k); } catch (x) { /* not stored */ } } store.set('vg.backUrl', ''); if ($('#backUrl')) $('#backUrl').value = ''; findBack(); imgStatus('กลับไปใช้หลังการ์ดลายของเกมแล้ว'); });
   $('#imgDir').addEventListener('change', e => { addImages(e.target.files); e.target.value = ''; });
   $('#imgClear').addEventListener('click', clearImages);
   Lobby.wire();
@@ -1166,6 +1169,7 @@ const idb = {
   open() { return new Promise((res, rej) => { try { const r = indexedDB.open('vgimg', 1); r.onupgradeneeded = () => r.result.createObjectStore('img'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } }); },
   async all() { const db = await this.open(); return new Promise((res, rej) => { const out = {}; const rq = db.transaction('img').objectStore('img').openCursor(); rq.onsuccess = () => { const c = rq.result; if (c) { out[c.key] = c.value; c.continue(); } else res(out); }; rq.onerror = () => rej(rq.error); }); },
   async put(k, v) { const db = await this.open(); return new Promise((res, rej) => { const tx = db.transaction('img', 'readwrite'); tx.objectStore('img').put(v, k); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); }); },
+  async del(k) { const db = await this.open(); return new Promise((res, rej) => { const tx = db.transaction('img', 'readwrite'); tx.objectStore('img').delete(k); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); }); },
   async clear() { const db = await this.open(); return new Promise((res, rej) => { const tx = db.transaction('img', 'readwrite'); tx.objectStore('img').clear(); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); }); },
 };
 let KNOWN = null;
@@ -1501,7 +1505,7 @@ const Rooms = {
         const code = t.split('/').pop(); if (!/^[A-Z2-9]{6}$/.test(code)) return;
         let o = null; try { o = buf.length ? JSON.parse(String(buf)) : null; } catch (e) { o = null; }
         if (!o || typeof o !== 'object' || Math.abs(Date.now() - (+o.t || 0)) > 15 * 60e3) delete this.rooms[code];
-        else this.rooms[code] = { n: String(o.n || '').slice(0, 16), d: String(o.d || '').slice(0, 40), seen: Date.now() };
+        else this.rooms[code] = { n: String(o.n || '').slice(0, 16), d: String(o.d || '').slice(0, 40), na: String(o.na || '').slice(0, 30), t: Math.min(+o.t || Date.now(), Date.now()), seen: Date.now() };
         this.draw();
       });
       this.timer = setInterval(() => this.draw(), 20000);
@@ -1512,10 +1516,11 @@ const Rooms = {
   draw() {
     const el = $('#qlList'); if (!el) return;
     const now = Date.now(); const list = Object.keys(this.rooms).filter(k => k !== QL.code && now - this.rooms[k].seen < 4 * 60e3).sort((a, b) => this.rooms[b].seen - this.rooms[a].seen);
-    $('#qlCount').textContent = this.c ? (list.length ? list.length + ' ห้อง' : '') : '';
-    if (!this.c) { el.innerHTML = '<p class="note">' + (this.busy ? 'กำลังโหลดรายการห้อง…' : 'โหลดรายการห้องไม่ได้ตอนนี้ — ยังเข้าห้องด้วยรหัสได้') + '</p>'; return; }
-    el.innerHTML = list.length ? list.map(k => { const r = this.rooms[k]; return '<div class="qlr"><div class="qlr-t"><b>' + esc(r.n || 'ไม่ระบุชื่อ') + '</b><span>' + esc(r.d) + '</span></div><code>' + k + '</code><button type="button" class="ghost strong" data-qlj="' + k + '">เข้าห้อง</button></div>'; }).join('')
-      : '<p class="note">ยังไม่มีห้องเปิดรอ — กด <b>สร้างห้อง</b> แล้วให้เพื่อนกดเข้าจากรายการนี้</p>';
+    $('#qlCount').textContent = this.c ? 'LIVE · ' + list.length + ' ห้อง' : '';
+    if (!this.c) { el.innerHTML = '<div class="qlx-empty' + (this.busy ? ' busy' : '') + '"><b>' + (this.busy ? 'กำลังเชื่อมต่อล็อบบี้…' : 'เชื่อมต่อล็อบบี้ไม่ได้ตอนนี้') + '</b><span>' + (this.busy ? 'รอสักครู่' : 'ยังเข้าห้องด้วยรหัสได้ตามปกติ') + '</span></div>'; return; }
+    const ago = r => { const m = Math.max(0, Math.round((Date.now() - r.t) / 60000)); return m < 1 ? 'เพิ่งเปิด' : m + ' นาที'; };
+    el.innerHTML = list.length ? list.map(k => { const r = this.rooms[k]; const nk = NAT[r.na] || 'none'; return '<div class="qlr n-' + nk + '"><div class="qlr-h"><i class="qlx-av">' + esc((r.n || '?').slice(0, 1).toUpperCase()) + '</i><div class="qlr-t"><b>' + esc(r.n || 'ไม่ระบุชื่อ') + '</b><code>' + k + '</code></div></div><div class="qlr-d"><b>' + esc(r.d || '—') + '</b><span>' + esc(r.na || '') + '</span></div><span class="qlr-ago">' + ago(r) + '</span><button type="button" class="go qlr-join" data-qlj="' + k + '">JOIN</button></div>'; }).join('')
+      : '<div class="qlx-empty"><b>ยังไม่มีห้องเปิดรอ</b><span>กด CREATE ROOM เพื่อเปิดห้องแรก แล้วให้เพื่อนกดเข้าจากรายการนี้</span></div>';
   },
 };
 const QL = {
@@ -1541,7 +1546,7 @@ const QL = {
     if (!this.mq || this.role !== 'host' || !this.code) return;
     const show = !!($('#qlPub') && $('#qlPub').checked) && !this.rejoin && !this.everLinked; const d = VG.DECKS[S.decks[0]];
     try { Presence.pub(); } catch (e) { /* no status */ }
-    try { this.mq.publish(this.lobbyT(this.code), show ? JSON.stringify({ n: myName(), d: d ? d.name : '', t: Date.now(), v: 1 }) : '', { qos: 1, retain: true }); } catch (e) { /* offline */ }
+    try { this.mq.publish(this.lobbyT(this.code), show ? JSON.stringify({ n: myName(), d: d ? d.name : '', na: d ? d.nation || '' : '', t: Date.now(), v: 1 }) : '', { qos: 1, retain: true }); } catch (e) { /* offline */ }
   },
   drop() {
     clearTimeout(this.retryT); clearTimeout(this.lostT); clearInterval(this.advT); this.tryN++; this.linked = false;
@@ -1554,7 +1559,7 @@ const QL = {
     this.code = code; this.role = 'host'; this.rejoin = !!opts.code; this.everLinked = false; this.rejoinGuest = false;
     setStatus(this.rejoin ? 'กำลังเปิดห้อง ' + code + ' อีกครั้ง…' : 'กำลังสร้างห้อง…');
     let shown = false; let paths = 0, failed = 0;
-    const ready = () => { if (shown || this.tryN !== my) return; shown = true; this.up = code; $('#qlCode').textContent = code; $('#qlCode').hidden = false; $('#qlCopy').hidden = false; setStatus(this.rejoin ? 'รอเพื่อนกลับเข้าห้อง ' + code + '…' : 'ส่งรหัส ' + code + ' ให้เพื่อน หรือให้เพื่อนกดเข้าจากรายการห้อง แล้วรอ…'); store.set('vg.qlLast', { code, role: 'host', t: Date.now() }); Rooms.draw(); };
+    const ready = () => { if (shown || this.tryN !== my) return; shown = true; this.up = code; $('#qlCode').textContent = code; qlWaitUI(true, this.rejoin); setStatus(this.rejoin ? 'รอเพื่อนกลับเข้าห้อง ' + code + '…' : 'ส่งรหัส ' + code + ' ให้เพื่อน หรือให้เพื่อนกดเข้าจากรายการห้อง แล้วรอ…'); store.set('vg.qlLast', { code, role: 'host', t: Date.now() }); Rooms.draw(); };
     const bad = () => { if (++failed >= paths && !shown && this.tryN === my) setStatus('ต่ออินเทอร์เน็ตไม่ได้ — ตรวจเน็ตแล้วกดสร้างห้องอีกครั้ง', true); };
     if (window.Peer) {
       paths++;
@@ -1632,6 +1637,8 @@ function p2pWire() {
   $('#qlHost').addEventListener('click', () => QL.host());
   $('#qlName').value = myName(); $('#qlName').addEventListener('input', e => { store.set('vg.name', e.target.value.trim().slice(0, 16)); });
   $('#qlPub').addEventListener('change', () => QL.advert());
+  $('#qlCancel').addEventListener('click', () => { p2pReset(); setStatus('ปิดห้องแล้ว'); Rooms.draw(); });
+  const av = () => { $('#qlAv').textContent = (myName() || '?').slice(0, 1).toUpperCase(); }; av(); $('#qlName').addEventListener('input', av);
   $('#qlList').addEventListener('click', e => { const b = e.target.closest('[data-qlj]'); if (b) QL.join(b.dataset.qlj); });
   $('#qlBack').addEventListener('click', () => { const l = store.get('vg.qlLast'); if (!l || !l.code) return; if (l.role === 'host') QL.host({ code: l.code }); else QL.join(l.code, { rejoin: true }); });
   $('#qlJoin').addEventListener('click', () => QL.join($('#qlIn').value));
@@ -1648,7 +1655,8 @@ function p2pWire() {
   $('#p2pCopyA').addEventListener('click', e => copy('#p2pAns', e.currentTarget));
   role('host');
 }
-function p2pReset() { P2P.close(); P2P.viaQL = false; QL.drop(); if ($('#qlCode')) { $('#qlCode').hidden = true; $('#qlCopy').hidden = true; } for (const id of ['#p2pOffer', '#p2pAnsIn', '#p2pOfferIn', '#p2pAns']) $(id).value = ''; $('#p2pHost2').hidden = true; $('#p2pGuest2').hidden = true; }
+function qlWaitUI(on, rejoin) { if (!$('#qlWait')) return; $('#qlWait').hidden = !on; $('#qlCreate').hidden = !!on; if (on) $('#qlWaitNote').textContent = rejoin ? 'รอเพื่อนกลับเข้าห้อง…' : 'รอผู้ท้าชิง… ส่งรหัสให้เพื่อน หรือให้เพื่อนกดเข้าจากรายการห้อง'; }
+function p2pReset() { P2P.close(); P2P.viaQL = false; QL.drop(); qlWaitUI(false); for (const id of ['#p2pOffer', '#p2pAnsIn', '#p2pOfferIn', '#p2pAns']) $(id).value = ''; $('#p2pHost2').hidden = true; $('#p2pGuest2').hidden = true; }
 
 /* ===== player accounts (game only): sign up / log in with e-mail + password on the owner's Supabase project =====
    Keeps: profile (name, friend code), decks, match history, friends. Online status and room invites travel over the same MQTT broker as the room list. */

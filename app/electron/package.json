@@ -18,6 +18,7 @@
     "files": [
       "main.js",
       "vg.ico",
+      "updater.html",
       "game/**"
     ],
     "win": {

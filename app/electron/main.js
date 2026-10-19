@@ -53,29 +53,56 @@ function open() {
   win.on('page-title-updated', e => e.preventDefault());
   win.loadFile(path.join(__dirname, 'game', 'VanguardDeckLab.html'));
 }
-function updates() {
-  if (!app.isPackaged || process.env.VG_NO_UPDATE) return;
-  let au; try { au = require('electron-updater').autoUpdater; } catch (e) { return; }
+/* ---- updates: a small window checks first; a new version is installed before the game opens (forced). ----
+   Setup (NSIS): download with progress, then install and restart by itself. Portable: cannot replace itself → the window asks to download the new file; the game does not open.
+   While the game is open it checks every 3 hours; a new version is downloaded and the game restarts into it (the room can be rejoined with "กลับเข้าห้องล่าสุด"). */
+let splash = null;
+function say(s) { if (splash && !splash.isDestroyed()) splash.webContents.executeJavaScript('window.setState && setState(' + JSON.stringify(s) + ')').catch(() => {}); }
+function openSplash() {
+  splash = new BrowserWindow({ width: 520, height: 340, frame: false, resizable: false, show: false, center: true, backgroundColor: '#0b0d24', title: 'Vanguard D Deck Lab', icon: path.join(__dirname, 'vg.ico'), webPreferences: { contextIsolation: true, sandbox: true, devTools: !app.isPackaged } });
+  splash.webContents.on('will-navigate', (e, url) => { e.preventDefault(); if (url === 'vgact://download') shell.openExternal(RELEASES); if (url === 'vgact://quit') app.quit(); });
+  splash.once('ready-to-show', () => splash.show());
+  return splash.loadFile(path.join(__dirname, 'updater.html')).then(() => say({ ver: app.getVersion() }));
+}
+function closeSplash() { if (splash && !splash.isDestroyed()) splash.destroy(); splash = null; }
+async function startup() {
+  const skip = !app.isPackaged || process.env.VG_NO_UPDATE;
+  let au = null; if (!skip) { try { au = require('electron-updater').autoUpdater; } catch (e) { au = null; } }
+  if (!au) { open(); return; }
+  await openSplash();
   const portable = !!process.env.PORTABLE_EXECUTABLE_DIR;
   au.autoDownload = !portable; au.autoInstallOnAppQuit = true;
+  let done = false; const go = () => { if (done) return; done = true; open(); closeSplash(); later(au, portable); };
+  const timer = setTimeout(go, 12000);   // no answer (offline, GitHub down): play the version we have
   au.on('update-available', info => {
-    if (!portable) { if (win) win.setTitle('Vanguard D Deck Lab ' + app.getVersion() + ' — กำลังโหลดเวอร์ชัน ' + info.version + '…'); return; }
-    dialog.showMessageBox(win, { type: 'info', title: 'มีเวอร์ชันใหม่', message: 'Vanguard Deck Lab เวอร์ชัน ' + info.version + ' ออกแล้ว', detail: 'ไฟล์ Portable อัปเดตเองไม่ได้ กดดาวน์โหลดเพื่อเปิดหน้าโหลดไฟล์ใหม่ (หรือใช้ตัว Setup ซึ่งอัปเดตเองอัตโนมัติ)', buttons: ['ดาวน์โหลด', 'ไว้ทีหลัง'], defaultId: 0, cancelId: 1 })
-      .then(r => { if (r.response === 0) shell.openExternal(RELEASES); });
+    clearTimeout(timer); if (done) return;
+    if (portable) { say({ msg: 'มีเวอร์ชันใหม่ ' + info.version + ' — ต้องอัปเดตก่อนเล่น', sub: 'ตัว Portable อัปเดตตัวเองไม่ได้ กดดาวน์โหลดไฟล์ใหม่ (แนะนำตัว Setup ซึ่งอัปเดตเองอัตโนมัติ)', pct: 100, acts: true }); return; }
+    say({ msg: 'พบเวอร์ชันใหม่ ' + info.version + ' — กำลังดาวน์โหลด', sub: '', pct: 0 });
   });
-  au.on('download-progress', p => { if (win) win.setProgressBar(Math.max(0, Math.min(1, p.percent / 100))); });
+  au.on('download-progress', p => { if (done) return; say({ pct: p.percent, sub: (p.transferred / 1048576).toFixed(1) + ' / ' + (p.total / 1048576).toFixed(1) + ' MB · ' + (p.bytesPerSecond / 1048576).toFixed(1) + ' MB/s' }); });
+  au.on('update-downloaded', () => { if (done) return; say({ msg: 'กำลังติดตั้งเวอร์ชันใหม่…', sub: 'เกมจะเปิดขึ้นมาใหม่เอง', pct: 100 }); setTimeout(() => au.quitAndInstall(true, true), 800); });
+  au.on('update-not-available', () => { clearTimeout(timer); say({ msg: 'เป็นเวอร์ชันล่าสุดแล้ว', pct: 100 }); setTimeout(go, 300); });
+  au.on('error', e => { console.log('update check failed:', e && e.message); if (!done && !(splash && splash.isDestroyed())) { clearTimeout(timer); setTimeout(go, 200); } });
+  au.checkForUpdates().catch(() => { clearTimeout(timer); go(); });
+}
+/* while playing: check every 3 hours; a new version is downloaded, then the game restarts into it */
+function later(au, portable) {
+  au.removeAllListeners('update-available'); au.removeAllListeners('download-progress'); au.removeAllListeners('update-downloaded'); au.removeAllListeners('update-not-available'); au.removeAllListeners('error');
+  au.on('error', e => { if (win && !win.isDestroyed()) win.setProgressBar(-1); console.log('update check failed:', e && e.message); });
+  au.on('update-available', info => {
+    if (portable) { dialog.showMessageBox(win, { type: 'warning', title: 'ต้องอัปเดต', message: 'Vanguard Deck Lab เวอร์ชัน ' + info.version + ' ออกแล้ว', detail: 'ต้องใช้เวอร์ชันใหม่ เกมจะปิดและเปิดหน้าดาวน์โหลด', buttons: ['ดาวน์โหลดเวอร์ชันใหม่'], noLink: true }).then(() => { shell.openExternal(RELEASES); app.quit(); }); return; }
+    if (win) win.setTitle('Vanguard D Deck Lab ' + app.getVersion() + ' — กำลังโหลดเวอร์ชัน ' + info.version + '…');
+  });
+  au.on('download-progress', p => { if (win && !win.isDestroyed()) win.setProgressBar(Math.max(0, Math.min(1, p.percent / 100))); });
   au.on('update-downloaded', info => {
-    if (win) { win.setProgressBar(-1); win.setTitle('Vanguard D Deck Lab ' + app.getVersion() + ' — เวอร์ชัน ' + info.version + ' พร้อมติดตั้ง'); }
-    dialog.showMessageBox(win, { type: 'info', title: 'อัปเดตพร้อมแล้ว', message: 'โหลดเวอร์ชัน ' + info.version + ' เสร็จแล้ว', detail: 'รีสตาร์ทเกมเพื่อใช้เวอร์ชันใหม่ตอนนี้เลยไหม? ถ้ากด "ไว้ทีหลัง" เกมจะอัปเดตเองตอนปิดเกม', buttons: ['รีสตาร์ทเลย', 'ไว้ทีหลัง'], defaultId: 0, cancelId: 1 })
-      .then(r => { if (r.response === 0) setImmediate(() => au.quitAndInstall(true, true)); });
+    if (win && !win.isDestroyed()) win.setProgressBar(-1);
+    dialog.showMessageBox(win, { type: 'info', title: 'อัปเดต', message: 'เวอร์ชัน ' + info.version + ' พร้อมแล้ว — เกมจะรีสตาร์ทเพื่ออัปเดต', detail: 'ถ้ากำลังเล่นออนไลน์ เปิดเกมใหม่แล้วกด "กลับเข้าห้องล่าสุด" เพื่อเล่นต่อจากเดิม', buttons: ['รีสตาร์ทและอัปเดต'], noLink: true }).then(() => setImmediate(() => au.quitAndInstall(true, true)));
   });
-  au.on('error', e => { if (win) win.setProgressBar(-1); console.log('update check failed:', e && e.message); });
-  const check = () => au.checkForUpdates().catch(() => {});
-  setTimeout(check, 4000); setInterval(check, 3 * 60 * 60 * 1000);   // at start, then every 3 hours while the game is open
+  setInterval(() => au.checkForUpdates().catch(() => {}), 3 * 60 * 60 * 1000);
 }
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => { const w = BrowserWindow.getAllWindows()[0]; if (w) { if (w.isMinimized()) w.restore(); w.focus(); } });
-  app.whenReady().then(() => { try { setupCache(); } catch (e) { console.log('picture cache off:', e && e.message); } open(); updates(); });
-  app.on('window-all-closed', () => app.quit());
+  app.whenReady().then(() => { try { setupCache(); } catch (e) { console.log('picture cache off:', e && e.message); } startup(); });
+  app.on('window-all-closed', () => { if (!splash) app.quit(); });
 }

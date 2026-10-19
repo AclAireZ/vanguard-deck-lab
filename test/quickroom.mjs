@@ -18,7 +18,7 @@ async function open(name) {
   pg.on('console', m => { if (/peer|PeerJS|ERROR|pictures:/i.test(m.text())) errs.push(name + ' console: ' + m.text().slice(0, 200)); }); await pg.addInitScript(() => { try { if (!localStorage.getItem('vg.sb')) localStorage.setItem('vg.sb', JSON.stringify({ off: true })); } catch (e) {} }); await pg.goto('http://127.0.0.1:9999/'); await pg.waitForTimeout(400); await pg.click('#modeSeg [data-mode="online"]'); await pg.waitForTimeout(200); return pg;
 }
 const A = await open('A'), B = await open('B');
-await A.click('#qlHost'); await A.waitForSelector('#qlCode:not([hidden])', { timeout: 30000 });
+await A.click('#qlHost'); await A.waitForSelector('#qlWait:not([hidden])', { timeout: 30000 });
 const code = (await A.textContent('#qlCode')).trim(); console.log('room code', code);
 await B.selectOption('#deckSel0', 'TD01'); await B.fill('#qlIn', code.toLowerCase()); await B.click('#qlJoin');
 await B.waitForTimeout(CLOUD ? 3000 : 6000); console.log('A:', await A.textContent('#onStatus'), '| B:', await B.textContent('#onStatus'), errs); await A.waitForSelector('#table:not([hidden])', { timeout: 60000 }); await B.waitForSelector('#table:not([hidden])', { timeout: 60000 });

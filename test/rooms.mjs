@@ -36,7 +36,7 @@ const drive = (pg, ms) => pg.evaluate(async ms => {
 const status = pg => pg.textContent('#onStatus');
 async function start(A, B, how) {
   await A.fill('#qlName', 'Aichi'); await B.fill('#qlName', 'Kai');
-  await A.click('#qlHost'); await A.waitForSelector('#qlCode:not([hidden])', { timeout: 30000 }); const code = (await A.textContent('#qlCode')).trim();
+  await A.click('#qlHost'); await A.waitForSelector('#qlWait:not([hidden])', { timeout: 30000 }); const code = (await A.textContent('#qlCode')).trim();
   await B.selectOption('#deckSel0', 'TD01');
   if (how === 'list') { await B.waitForSelector('[data-qlj="' + code + '"]', { timeout: 30000 }); const row = await B.textContent('.qlr'); if (!/Aichi/.test(row)) errs.push('room list row has no host name: ' + row); await B.click('[data-qlj="' + code + '"]'); }
   else { await B.fill('#qlIn', code); await B.click('#qlJoin'); }

@@ -59,12 +59,38 @@
       <section class="lb-sec" id="p2pSec">
         <div class="panel" id="p2pPanel" hidden>
           <div class="ql" id="qlBox">
-            <h3 class="ql-h">ห้องออนไลน์</h3>
-            <p class="note">ทั้งสองคนเปิดเกมนี้ในเครื่องตัวเองและต่ออินเทอร์เน็ต เลือกเด็คด้านบน แล้วคนหนึ่งกด <b>สร้างห้อง</b> อีกคนกดเข้าจาก<b>รายการห้อง</b> หรือพิมพ์รหัส 6 ตัว ไฟท์เริ่มเอง ทั้งสองฝั่งเห็นรูปการ์ด ถ้าเน็ตหลุดระหว่างเล่น เกมจะต่อกลับเองและเล่นต่อจากเดิม</p>
-            <div class="row"><label class="qlname">ชื่อในเกม <input id="qlName" maxlength="16" autocomplete="off" placeholder="ชื่อของคุณ"></label></div>
-            <div class="row"><button type="button" class="go" id="qlHost">สร้างห้อง</button><label class="chk"><input type="checkbox" id="qlPub" checked> แสดงในรายการห้อง</label><div class="qlcode" id="qlCode" hidden></div><button type="button" class="ghost strong" id="qlCopy" hidden>คัดลอกรหัส</button></div>
-            <div class="row"><input class="code-in" id="qlIn" maxlength="6" placeholder="รหัสห้อง" autocomplete="off" aria-label="รหัสห้องของเพื่อน"><button type="button" class="ghost strong" id="qlJoin">เข้าห้อง</button><button type="button" class="ghost strong" id="qlBack" hidden>กลับเข้าห้องล่าสุด</button></div>
-            <div class="qllobby"><div class="qll-h"><b>ห้องที่เปิดรออยู่</b><span id="qlCount" class="note"></span></div><div id="qlList" class="qllist" aria-live="polite"></div></div>
+            <header class="qlx-top">
+              <div class="qlx-title"><b>LINK FIGHT</b><span>ล็อบบี้ออนไลน์</span></div>
+              <div class="qlx-me"><i class="qlx-av" id="qlAv">?</i><label class="qlname"><span>ชื่อในเกม</span><input id="qlName" maxlength="16" autocomplete="off" placeholder="ชื่อของคุณ"></label></div>
+            </header>
+            <div class="qlx-grid">
+              <section class="qlx-browser" aria-labelledby="qlBrowseH">
+                <div class="qll-h"><h3 id="qlBrowseH"><i class="qlx-live" aria-hidden="true"></i>ห้องที่เปิดรออยู่</h3><span id="qlCount" class="qlx-count"></span></div>
+                <div class="qlx-cols" aria-hidden="true"><span>เจ้าของห้อง</span><span>เด็ค</span><span>รอมา</span><span></span></div>
+                <div id="qlList" class="qllist" aria-live="polite"></div>
+              </section>
+              <aside class="qlx-side">
+                <div class="qlx-card qlx-create" id="qlCreate">
+                  <h4>สร้างห้อง</h4>
+                  <p class="note">เปิดห้องด้วยเด็คที่เลือกไว้ด้านบน แล้วรอผู้ท้าชิง</p>
+                  <button type="button" class="go qlx-big" id="qlHost"><span>CREATE ROOM</span><small>สร้างห้อง</small></button>
+                  <label class="chk"><input type="checkbox" id="qlPub" checked> แสดงในรายการห้อง</label>
+                </div>
+                <div class="qlx-card qlx-wait" id="qlWait" hidden>
+                  <h4>ห้องของคุณ</h4>
+                  <div class="qlx-radar" aria-hidden="true"><i></i><i></i><i></i></div>
+                  <div class="qlcode" id="qlCode"></div>
+                  <p class="note" id="qlWaitNote">รอผู้ท้าชิง… ส่งรหัสให้เพื่อน หรือให้เพื่อนกดเข้าจากรายการห้อง</p>
+                  <div class="row"><button type="button" class="ghost strong" id="qlCopy">คัดลอกรหัส</button><button type="button" class="ghost" id="qlCancel">ปิดห้อง</button></div>
+                </div>
+                <div class="qlx-card qlx-code">
+                  <h4>เข้าด้วยรหัส</h4>
+                  <div class="row"><input class="code-in" id="qlIn" maxlength="6" placeholder="XXXXXX" autocomplete="off" aria-label="รหัสห้องของเพื่อน"><button type="button" class="ghost strong" id="qlJoin">เข้าห้อง</button></div>
+                  <button type="button" class="ghost strong" id="qlBack" hidden>กลับเข้าห้องล่าสุด</button>
+                </div>
+              </aside>
+            </div>
+            <p class="note qlx-foot">ทั้งสองฝั่งเห็นรูปการ์ด · เน็ตหลุดระหว่างเล่น เกมต่อกลับเองและเล่นต่อจากเดิม</p>
           </div>
           <details class="qlman"><summary>เชื่อมไม่ได้? ใช้วิธีแลกรหัสยาวผ่านแชต</summary>
           <p class="note"><b>เล่นกับเพื่อนแบบเชื่อมตรง</b> — ทั้งสองคนเปิดไฟล์เกมนี้ในเครื่องของตัวเอง เลือกเด็คด้านบน แล้วแลกรหัสกัน 2 ครั้งผ่านแชต (LINE, Messenger ฯลฯ) ระหว่างเล่นส่งหากันแค่การเดิน รูปการ์ดของแต่ละคนโหลดในเครื่องตัวเอง</p>
@@ -119,6 +145,7 @@
           <p class="note"><label><input type="checkbox" id="imgJp"> ใช้รูปจากเว็บทางการ<b>ญี่ปุ่น</b>เป็นหลัก (การ์ดภาษาญี่ปุ่น · เฉพาะชุดที่ตรวจแล้วว่ารหัสการ์ดตรงกับฝั่งอังกฤษ คือบูสเตอร์หลักและชุดพิเศษบางชุด ชุดอื่นและการ์ดโปรโมใช้รูปฝั่งอังกฤษ)</label></p>
           <p class="note"><label><input type="checkbox" id="imgWeb"> ใช้รูปจากเว็บทางการ<b>อังกฤษ</b>เมื่อฝั่งญี่ปุ่นไม่มีใบนั้น</label></p>
           <p class="note"><label for="imgBase">ที่อยู่โฟลเดอร์รูปบนเว็บทางการอังกฤษ (ถ้ารูปไม่ขึ้น: เปิดหน้าการ์ดทางการ คลิกขวาที่รูป → คัดลอกที่อยู่รูปภาพ แล้ววางตรงนี้)</label><br><input type="text" id="imgBase" class="txt" style="width:100%" spellcheck="false"></p>
+          <div class="backpick"><div class="backprev" id="backPrev" aria-hidden="true"></div><div class="backpick-t"><b>หลังการ์ด</b><span class="note">เลือกรูปหลังการ์ดจากเครื่องของคุณได้ (เก็บไว้ในเครื่องนี้เท่านั้น ไม่ได้ส่งให้ใคร)</span><div class="row"><label class="btn" for="backIn">เลือกรูปหลังการ์ด…</label><input type="file" id="backIn" accept="image/*" hidden><button type="button" class="ghost" id="backReset">ใช้ลายของเกม</button></div></div></div>
           <p class="note"><label for="backUrl">ที่อยู่รูปหลังการ์ด (ไม่บังคับ — วางที่อยู่รูปที่ต้องการ หรือใส่ไฟล์ชื่อ <b>back.png</b> ในโฟลเดอร์ cards ถ้าเว้นว่างจะใช้หลังการ์ดลายของเกม)</label><br><input type="text" id="backUrl" class="txt" style="width:100%" spellcheck="false" placeholder="https://…"></p>
           <p class="note"><label><input type="checkbox" id="wikiOn"> แสดง<b>ข้อความการ์ดภาษาอังกฤษ</b>ในรายละเอียดการ์ด โดยโหลดสดจาก Cardfight!! Vanguard Wiki (ต้องต่อเน็ต · ไม่ได้เก็บไว้ในเกม)</label></p>
           <div class="row"><button type="button" class="ghost" id="imgRetry">ลองหารูปใหม่</button></div>
