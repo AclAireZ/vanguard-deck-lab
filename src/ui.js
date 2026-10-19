@@ -161,12 +161,16 @@ function autoWarm(g) { if (!LOCAL) return; const seen = new Set(); for (const k 
 /* ---- card back ----
    The drawn back is the game's own. The owner can use a picture of their own instead: an imported file named "back", a file cards/back.png|jpg|webp beside the local copy,
    or (local copy) an image address typed into the settings. */
+/* the default card back: the official design as shown on the Cardfight!! Vanguard Wiki (loaded from the wiki on each computer, kept in the picture cache — not part of the game files); face-down G units use the G-unit back */
+const DEF_BACK = 'https://static.wikia.nocookie.net/cardfight/images/1/1c/Sleeve133.png/revision/latest?cb=20160712170330';
+const DEF_GBACK = 'https://static.wikia.nocookie.net/cardfight/images/9/9b/Sleeve134.png/revision/latest?cb=20141006100704';
+function setGBack(url) { if (!url) return document.documentElement.style.removeProperty('--cbimgG'); const im = new Image(); im.referrerPolicy = 'no-referrer'; im.onload = () => document.documentElement.style.setProperty('--cbimgG', 'url("' + url + '")'); im.src = url; }
 function setBack(url) { document.documentElement.style.setProperty('--cbimg', url ? 'url("' + String(url).replace(/["\\\n]/g, '') + '")' : 'none'); document.body.classList.toggle('has-back', !!url); const pv = document.getElementById('backPrev'); if (pv) pv.classList.toggle('img', !!url); }
 function findBack() {
-  if (IMG.back || IMG.cardback) return setBack(IMG.back || IMG.cardback);
+  if (IMG.back || IMG.cardback) { setGBack(''); return setBack(IMG.back || IMG.cardback); }
   if (!LOCAL) return setBack('');
-  const u = store.get('vg.backUrl'); const tries = (typeof u === 'string' && /^https?:\/\//.test(u) ? [u] : []).concat(['cards/back.png', 'cards/back.jpg', 'cards/back.webp']);
-  const next = () => { const t = tries.shift(); if (!t) return setBack(''); const im = new Image(); im.referrerPolicy = 'no-referrer'; im.onload = () => setBack(t); im.onerror = next; im.src = t; };
+  const u = store.get('vg.backUrl'); const tries = (typeof u === 'string' && /^https?:\/\//.test(u) ? [u] : []).concat(['cards/back.png', 'cards/back.jpg', 'cards/back.webp', DEF_BACK]);
+  const next = () => { const t = tries.shift(); if (!t) return setBack(''); const im = new Image(); im.referrerPolicy = 'no-referrer'; im.onload = () => { setBack(t); setGBack(t === DEF_BACK ? DEF_GBACK : ''); }; im.onerror = next; im.src = t; };
   next();
 }
 
@@ -493,7 +497,7 @@ function render() {
     const rest = p.soul ? !!(sn.cards[sn.players[c.owner].circles.V] || {}).rest : p.host ? !!(sn.cards[p.host] || {}).rest : c.rest;
     let cls = 'card' + (p.flat ? ' flat' : '');
     for (const k of ['nomove', 'flash', 'shake', 'lunge', 'struck']) if (el.classList.contains(k)) cls += ' ' + k;
-    cls += (up ? ' up' : '') + (rest ? ' rest' : '') + (c.locked ? ' locked' : '') + (onfield && up ? ' onfield' : '') + (c.zone === 'hand' ? ' inhand' : '') + (c.zone === 'VC' ? ' vg' : '') + (c.zone === 'trigger' ? ' checking' : '') + (c.owner === S.viewer ? ' mine' : '');
+    cls += (up ? ' up' : '') + (rest ? ' rest' : '') + (c.locked ? ' locked' : '') + (onfield && up ? ' onfield' : '') + (c.zone === 'hand' ? ' inhand' : '') + (c.zone === 'gzone' ? ' gz' : '') + (c.zone === 'VC' ? ' vg' : '') + (c.zone === 'trigger' ? ' checking' : '') + (c.owner === S.viewer ? ' mine' : '');
     if (mk.cards[iid]) cls += ' ' + mk.cards[iid];
     if (el.className !== cls) el.className = cls;
   }
@@ -1157,7 +1161,7 @@ function wire() {
   $('#rejoinBtn').addEventListener('click', () => { const l = store.get('vg.lastRoom'); if (l && l.code) Net.join(l.code, S.decks[0]); });
   $('#imgIn').addEventListener('change', e => { addImages(e.target.files); e.target.value = ''; });
   $('#backIn').addEventListener('change', async e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; const blob = await shrink(f); if (IMG.back) URL.revokeObjectURL(IMG.back); else IMGN++; IMG.back = URL.createObjectURL(blob); try { await idb.put('back', blob); } catch (x) { /* this visit only */ } findBack(); imgStatus('ตั้งรูปหลังการ์ดแล้ว'); });
-  $('#backReset').addEventListener('click', async () => { for (const k of ['back', 'cardback']) if (IMG[k]) { URL.revokeObjectURL(IMG[k]); delete IMG[k]; IMGN--; try { await idb.del(k); } catch (x) { /* not stored */ } } store.set('vg.backUrl', ''); if ($('#backUrl')) $('#backUrl').value = ''; findBack(); imgStatus('กลับไปใช้หลังการ์ดลายของเกมแล้ว'); });
+  $('#backReset').addEventListener('click', async () => { for (const k of ['back', 'cardback']) if (IMG[k]) { URL.revokeObjectURL(IMG[k]); delete IMG[k]; IMGN--; try { await idb.del(k); } catch (x) { /* not stored */ } } store.set('vg.backUrl', ''); if ($('#backUrl')) $('#backUrl').value = ''; findBack(); imgStatus('กลับไปใช้หลังการ์ดมาตรฐานแล้ว'); });
   $('#imgDir').addEventListener('change', e => { addImages(e.target.files); e.target.value = ''; });
   $('#imgClear').addEventListener('click', clearImages);
   Lobby.wire();

@@ -1173,3 +1173,4 @@ p.manual a, p.betan a, .bd-list a, .irow a { color: var(--cyan); }
 .backprev { flex: none; width: 54px; height: 76px; border-radius: 5px; background: linear-gradient(150deg, #20245a, #0a0c22); border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }
 .backprev.img { background: var(--cbimg) center / cover no-repeat, #000; }
 .backpick-t { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.has-back .card.gz .cb { background-image: var(--cbimgG, var(--cbimg)); }
