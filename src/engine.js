@@ -460,9 +460,10 @@ class Game {
   canStride(p) {
     const P = this.players[p]; const v = this.vg(p), ov = this.vg(1 - p); if (!v || v.heart != null || this.tf['strode' + p] || this.tf['nostride' + p]) return false;
     if (!((this.grade(v) >= 3 && ov && this.grade(ov) >= 3) || (this.tf['g0' + p] || 0) >= 3)) return false;
-    if (!P.gzone.some(i => !this.cards[i].faceup && !this.def(this.cards[i]).special && this.strideIfOk(p, i))) return false;
-    return !!this.tf['sfree' + p] || this.handFor(p).reduce((n, i) => n + this.strideGrade(i), 0) >= 3;
+    return P.gzone.some(i => !this.cards[i].faceup && !this.def(this.cards[i]).special && this.strideIfOk(p, i) && this.strideCostOk(p, i));
   }
+  /* the stride cost of this G unit: the usual "hand grades 3 or more", or def.scost = discard one hand card matching that filter */
+  strideCostOk(p, i) { if (this.tf['sfree' + p]) return true; const sc = this.def(this.cards[i]).scost; const v = this.vg(p); if (sc) return this.handFor(p).some(h => VG.fx.mf(this, v, this.cards[h], sc)); return this.handFor(p).reduce((n, h) => n + this.strideGrade(h), 0) >= 3; }
   *strideStep(p) {
     if (!this.canStride(p)) return;
     const y = yield* this.yesNo(p, { title: 'สไตรด์?', sub: 'ทิ้งการ์ดจากมือที่เกรดรวม 3 ขึ้นไป แล้ววาง G ยูนิทจาก G โซนบน VC (แวนการ์ดเดิมกลายเป็นฮาร์ท จนจบเทิร์น)', options: [{ id: 'yes', label: 'สไตรด์' }, { id: 'no', label: 'ไม่สไตรด์' }] });
@@ -470,12 +471,18 @@ class Game {
     yield* this.doStride(p);
   }
   *doStride(p, free) {
-    const P = this.players[p]; const gs = P.gzone.filter(i => !this.cards[i].faceup && !this.def(this.cards[i]).special && this.strideIfOk(p, i)); if (!gs.length) return false;
-    const [gi] = yield* this.chooseCards(p, gs, { min: 1, max: 1, title: 'เลือก G ยูนิทที่จะสไตรด์', zone: 'gzone', hint: 'search' }); if (gi == null) return false;
+    const P = this.players[p]; const gs = P.gzone.filter(i => !this.cards[i].faceup && !this.def(this.cards[i]).special && this.strideIfOk(p, i) && (free || this.strideCostOk(p, i))); if (!gs.length) return false;
+    const [gi] = yield* this.chooseCards(p, gs, { min: 1, max: 1, title: 'เลือก G ยูนิทที่จะสไตรด์', zone: 'gzone', hint: 'search' }); if (gi == null) return false; const g0 = this.cards[gi];
     let altPaid = false;
     if (!(free || this.tf['sfree' + p]) && (this.def(this.vg(p)).clans || []).length) { const P0 = this.players[p]; const alt = P0.hand.concat(P0.drop).find(i => this.def(this.cards[i]).strideAlt); if (alt != null && (yield* this.yesNo(p, { title: 'จ่ายคอสต์สไตรด์ด้วยการนำ ' + this.name(this.cards[alt]) + ' ออกจากเกมแทนการทิ้งการ์ด?', iid: alt, options: [{ id: 'yes', label: 'ใช้' }, { id: 'no', label: 'ทิ้งการ์ดตามปกติ' }] }))) { this.move(alt, 'removed', { reason: 'cost' }); const fd = P0.damage.filter(i => !this.cards[i].faceup); if (fd.length) { const [u] = yield* this.chooseCards(p, fd, { min: 0, max: 1, title: 'หงายดาเมจได้สูงสุด 1 ใบ', zone: 'damage', hint: 'search', noAuto: true }); if (u != null) this.cards[u].faceup = true; } altPaid = true; } }
     if (free || this.tf['sfree' + p]) this.tf['sfree' + p] = 0;
     else if (altPaid) {}
+    else if (this.def(g0).scost) {   // this G unit's own stride cost: discard one matching card
+      const v0 = this.vg(p); const ok = this.handFor(p).filter(h => VG.fx.mf(this, v0, this.cards[h], this.def(g0).scost)); if (!ok.length) return false;
+      const sel = yield* this.chooseCards(p, ok, { min: 1, max: 1, title: 'ทิ้งการ์ดเพื่อสไตรด์ ' + this.name(g0), hint: 'discard', zone: 'hand' }); if (sel[0] == null) return false;
+      const prev = this.cur; this.cur = { iid: gi, p, cost: true }; this.move(sel[0], 'drop', { reason: 'discard' }); this.cur = prev;
+      this.emit('strideDisc', { p, ids: sel });
+    }
     else {
       let tot = 0; const paid = [];
       while (tot < 3) { const left = this.handFor(p).filter(i => !paid.includes(i)); if (!left.length) return false; const sel = yield* this.chooseCards(p, left, { min: 1, max: 1, title: 'ทิ้งการ์ดเพื่อสไตรด์ (เกรดรวม ' + tot + '/3)', hint: 'discard', zone: 'hand' }); if (sel[0] == null) return false; paid.push(sel[0]); tot += this.strideGrade(sel[0]); }
@@ -509,13 +516,13 @@ class Game {
     this.tf['retried' + iid] = 1; this.standUnit(iid); this.addMod(iid, { power: 5000, critSet: 1, driveSet: 1 }, 'turn'); this.log(this.name(c) + ' รีทราย (Retry)', c.owner); this.tlog({ k: 'retry', iid, no: c.no, p: c.owner, by }); this.emit('retried', { iid, p: c.owner }); return true; }
   /* dominate (rules 7.39): player p stands one of the opponent's rear-guards and uses it as their own for one attack against the opponent's other unit */
   *dominate(p, iid, o) {
-    o = o || {}; const c = this.cards[iid]; if (!c || c.zone !== 'RC' || c.owner === p || c.locked) return false;
-    const tg = this.units(1 - p).filter(u => u.iid !== iid).map(u => u.iid); if (!tg.length) return false;
+    o = o || {}; const c = this.cards[iid]; if (!c || !(c.zone === 'RC' || (o.vc && c.zone === 'VC')) || c.owner === p || c.locked) return false;
+    const tg = this.units(1 - p).filter(u => u.iid !== iid && (!o.tgt || (o.tgt === 'v' ? u.zone === 'VC' : u.zone === 'RC'))).map(u => u.iid); if (!tg.length) return false;   // o.tgt: it must attack the vanguard ('v') / a rear-guard ('r'); o.vc: a vanguard may be dominated too
     c.rest = false; c.dom = { p, t: this.turnNo }; if (o.mods) this.addMod(iid, o.mods, 'turn');
     this.log('Dominate! ' + this.name(c), p); this.tf['dom' + p] = (this.tf['dom' + p] || 0) + 1;
     const sel = yield* this.chooseCards(p, tg, { min: 1, max: 1, title: 'เลือกยูนิทของคู่ต่อสู้ที่ ' + this.name(c) + ' จะโจมตี', hint: 'retire', zone: 'field' });
     const ph = this.phase, prevB = this.battle; this.phase = 'battle'; this.battle = null;
-    if (sel.length && this.cards[iid].zone === 'RC') yield* this.doBattle(p, iid, sel[0]);
+    if (sel.length && (this.cards[iid].zone === 'RC' || (o.vc && this.cards[iid].zone === 'VC'))) yield* this.doBattle(p, iid, sel[0]);
     this.phase = ph; this.battle = prevB;
     const cc = this.cards[iid]; if (cc) delete cc.dom;
     if (o.ret && cc && cc.zone === 'RC') { if (!(yield* this.wouldLeave(iid))) this.move(iid, 'drop', { reason: 'retire' }); }
@@ -995,11 +1002,14 @@ class Game {
     this.draw(p, 1);
     yield* this.checkTiming();
     if (!(xt && xt.skipRM)) {
+    if (xt && xt.noStr) this.tf['nostride' + p] = 1;   // additional turn: "you cannot stride"
+    if (!(xt && xt.skipR)) {   // additional turn: "skip the ride phase"
     this.setPhase('ride');
     this.emit('ridePhaseStart', { p });
     yield* this.checkTiming(); yield* this.runLaters('R', p);
     yield* this.ridePhase(p);
     yield* this.strideStep(p);
+    }
     this.setPhase('main');
     this.emit('mainStart', { p });
     yield* this.checkTiming(); yield* this.runLaters('M', p);

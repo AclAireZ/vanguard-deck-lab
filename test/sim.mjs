@@ -12,7 +12,7 @@ function invariants(G, tag) {
     for (const k in P.circles) { const i = P.circles[k]; if (!i) continue; if (seen.has(i)) throw new Error(tag + ' dup circle'); seen.add(i); const c = G.cards[i]; if (c.pos !== k) throw new Error(tag + ' pos mismatch'); if (!c.token) n++; }
     if (n !== P.total) throw new Error(tag + ' card count ' + n + ' for p' + p + ' expected ' + P.total);
     if (P.energy < 0 || P.energy > 10) throw new Error(tag + ' energy ' + P.energy);
-    if (P.damage.length > 6) throw new Error(tag + ' damage>6');
+    if (P.damage.length > G.loseAt(P.idx)) throw new Error(tag + ' damage>' + G.loseAt(P.idx));   // some cards make the losing count seven
   }
 }
 export function mulb(a) { return () => { let t = (a += 0x6D2B79F5) >>> 0; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }

@@ -257,3 +257,13 @@ mk · tag · gv 1|2 · ot (other) · tk · col · row f|b · st s|r · dist (dif
 - Counts `["colpw", F]`. Conds `dvcr F`, `nsnret`, `nbtl {f, from, to}`. Triggers `ustood {wf, own}`, `rtd` takes `wf`. powerUp event carries `n`.
 - Mods `nullAb`, `noDblSt`. pfx `rideTax`, `noAutoP`.
 - Card keys `secretSword`, `mbAny`, `ozShield {nm, vg, rg, sh}`, `ozTrig {nm, vg, rg, crit}`, `xod2`, `saien {vg, nh, tk}`, `gsLess`, `gleip`, `race2`, `bsStay3`, `bsToDeck`, `noSG`, `frozenStars`. XTOK `demon wolf, fenrir` (crit field supported).
+
+## Version 67 additions (G units)
+- Card key `scost: F` — this G unit's stride cost is "discard one card matching F from hand" (engine `G.strideCostOk`, `doStride`). `strideIf` already existed.
+- Dominate `["dom",{tgt:'v'|'r', vc:1, m, ret}]`: must attack the vanguard / a rear-guard; `vc` lets a vanguard be dominated. Mod pair `{driveSet:1, rgDrive:1}` = "its drive becomes 1 and it performs drive checks".
+- `["xturn",{skipR:1,noStr:1}]` — additional turn without the ride phase / without stride.
+- Choose `{"s":"x","k":"lk"}` = locked cards (of either player) — use with `["unlock"]`; group `itg {s,k:'lk'}` too.
+- Cost `["rrgd", n, F]` — retire 1 to n rear-guards with different card names (`pd i` = how many).
+- Tags made by mkdb from the card itself: `ritual` (text "Ritual N" or a Ritual condition), `hollow` (has the hollow state step) → filters `{"tag":"ritual"}` / `{"tag":"hollow"}`.
+- Lines with `[generation break N]` or `ritual N` in the header: the header is not read; write `t`, `z`, `l` in the entry.
+- `node tools/gl.mjs <card regexp>` lists the unreadable lines of cards outside the Japanese pool.
