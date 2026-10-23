@@ -89,7 +89,8 @@ function imgKeys(d) {
 function imgFor(d) { if (IMGN) for (const k of imgKeys(d)) if (IMG[k]) return IMG[k]; return autoImg(d); }
 /* Local copy only (window.VG_LOCAL): a card's picture is looked for in the "cards" folder beside the game file, then on the official card list site.
    The game file itself holds no pictures; whatever is found is shown straight from where it lives. */
-const LOCAL = window.VG_LOCAL || null; const AUTO = {}; const AQ = []; let aBusy = 0, aTimer = 0; const ASTAT = { folder: 0, jp: 0, web: 0, none: 0 };
+const LOCAL = window.VG_LOCAL || null; const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());   // the phone app: no "cards" folder beside it, no desktop picture cache
+ const AUTO = {}; const AQ = []; let aBusy = 0, aTimer = 0; const ASTAT = { folder: 0, jp: 0, web: 0, none: 0 };
 function imgBase() { const b = store.get('vg.imgBase'); return typeof b === 'string' ? b : LOCAL.base; }
 function webOn() { return store.get('vg.imgWeb') !== false; }
 function jpOn() { return store.get('vg.imgJp') !== false; }
@@ -116,9 +117,9 @@ function autoImg(d) {
   if (d.jimg && jpOn() && LOCAL.jp) tries.push(['jp', LOCAL.jp + d.jimg + '.png']);   // the picture file named by the Japanese list for this very card
   else if (!VG.DB.jp && path && jpOn() && LOCAL.jp && jpPath(path)) tries.push(['jp', LOCAL.jp + jpPath(path) + '.png']);
   if (path && webOn() && imgBase()) tries.push(['web', imgBase() + path + '.png']);
-  if (d.jimg) tries.push(['folder', 'cards/' + d.jimg.split('/').pop() + '.png']);
+  if (!NATIVE) { if (d.jimg) tries.push(['folder', 'cards/' + d.jimg.split('/').pop() + '.png']);
   if (path) tries.push(['folder', 'cards/' + path.split('/').pop() + '.png']);
-  for (const e of ['png', 'jpg', 'webp']) tries.push(['folder', 'cards/' + encodeURIComponent(safe) + '.' + e]);
+  for (const e of ['png', 'jpg', 'webp']) tries.push(['folder', 'cards/' + encodeURIComponent(safe) + '.' + e]); }
   const known = amap()[key];
   if (known && tries.some(t => t[1] === known)) {   // remembered from an earlier visit: use it now, and check quietly that it still loads
     AUTO[key] = known; const im = new Image(); im.referrerPolicy = 'no-referrer'; im.decoding = 'async'; AKEEP[key] = im;
@@ -169,7 +170,7 @@ function setBack(url) { document.documentElement.style.setProperty('--cbimg', ur
 function findBack() {
   if (IMG.back || IMG.cardback) { setGBack(''); return setBack(IMG.back || IMG.cardback); }
   if (!LOCAL) return setBack('');
-  const u = store.get('vg.backUrl'); const tries = (typeof u === 'string' && /^https?:\/\//.test(u) ? [u] : []).concat(['cards/back.png', 'cards/back.jpg', 'cards/back.webp', DEF_BACK]);
+  const u = store.get('vg.backUrl'); const tries = (typeof u === 'string' && /^https?:\/\//.test(u) ? [u] : []).concat(NATIVE ? [DEF_BACK] : ['cards/back.png', 'cards/back.jpg', 'cards/back.webp', DEF_BACK]);
   const next = () => { const t = tries.shift(); if (!t) return setBack(''); const im = new Image(); im.referrerPolicy = 'no-referrer'; im.onload = () => { setBack(t); setGBack(t === DEF_BACK ? DEF_GBACK : ''); }; im.onerror = next; im.src = t; };
   next();
 }
@@ -2227,7 +2228,7 @@ function boot() {
     $('#imgWeb').addEventListener('change', e => { store.set('vg.imgWeb', e.target.checked); autoReset(); });
     $('#imgRetry').addEventListener('click', () => { autoReset(); findBack(); });
     { const show = o => { if (!o || o.n == null) return; $('#cacheRow').hidden = false; $('#cacheStat').textContent = 'เก็บรูปไว้ในเครื่องนี้แล้ว ' + o.n.toLocaleString('en-US') + ' รูป (' + (o.bytes / 1048576).toFixed(0) + ' MB) — เปิดครั้งต่อไปขึ้นทันที ไม่ต้องโหลดใหม่'; };
-      const ask = p => fetch('vgcache://img/' + p).then(r => r.json()).then(show).catch(() => {});   // only the game app answers this (picture cache on disk)
+      const ask = p => NATIVE ? Promise.resolve() : fetch('vgcache://img/' + p).then(r => r.json()).then(show).catch(() => {});   // only the game app answers this (picture cache on disk)
       ask('stat'); $('#navOpt').addEventListener('click', () => ask('stat'));
       $('#cacheClear').addEventListener('click', () => { ask('clear').then(() => { autoReset(); }); }); }
     $('#wikiOn').checked = wikiOn(); $('#wikiOn').addEventListener('change', e => { store.set('vg.wikiText', e.target.checked); });
