@@ -46,7 +46,7 @@ const LAY = {
   },
 };
 
-const S = {
+const S = { level: 'normal',
   mode: 'solo', decks: ['1MCW2', 'TD01'], first: 'rand', speed: 1, lay: 'land', viewer: 0, seat: 0,
   game: null, cfg: null, meta: null, snap: null, pl: {}, busy: false, running: false, again: false,
   src: null, picks: new Set(), picker: null, sending: false, view: 'auto', els: {}, tags: {},
@@ -211,13 +211,15 @@ function deckOptions(sel) {
   const opt = id => '<option value="' + esc(id) + '"' + (sel === id ? ' selected' : '') + '>' + esc(VG.DECKS[id].name) + '</option>';
   return (mine.length ? '<optgroup label="เด็คของฉัน">' + mine.map(opt).join('') + '</optgroup>' : '') + '<optgroup label="เด็คพร้อมเล่น">' + built.map(opt).join('') + '</optgroup>';
 }
+const LVL_NAME = { easy: 'ง่าย', normal: 'ปกติ', hard: 'ยาก' };
+const LVL_NOTE = { easy: 'บอทเล่นหลวมๆ การ์ดเฉพาะตอนจะแพ้ เหมาะกับฝึกเล่น', normal: 'บอทเล่นตามหลักทั่วไป', hard: 'บอทเผื่อทริกเกอร์ตอนการ์ด เก็บมือไว้การ์ด และโจมตีด้วยแวนการ์ดก่อน' };
 function renderLobby() {
   const online = S.mode === 'online';
   for (let i = 0; i < 2; i++) if (!VG.DECKS[S.decks[i]]) S.decks[i] = i ? 'TD01' : '1MCW2';
   document.querySelectorAll('#modeSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === S.mode)));
   document.querySelectorAll('#firstChips button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.first === String(S.first))));
   const labels = online ? ['เด็คของคุณ'] : S.mode === 'bot' ? ['เด็คของคุณ', 'เด็คของบอท'] : ['ฝั่งคุณ (P1)', 'อีกฝั่ง (P2)'];
-  const tags = online ? ['YOU'] : S.mode === 'bot' ? ['PLAYER', 'CPU'] : ['PLAYER 1', 'PLAYER 2'];
+  const tags = online ? ['YOU'] : S.mode === 'bot' ? ['PLAYER', 'CPU · ' + ({ easy: 'EASY', normal: 'NORMAL', hard: 'HARD' }[S.level] || '')] : ['PLAYER 1', 'PLAYER 2'];
   $('#slots').className = labels.length === 1 ? 'one' : '';
   $('#slots').innerHTML = labels.map((lb, i) => '<div class="dk p' + i + '"><div class="dk-tag"><span>' + tags[i] + '</span><i>' + lb + '</i></div><div class="dk-fan" aria-hidden="true">' + deckFan(S.decks[i]) + '</div>'
     + '<div class="dk-name">' + esc(VG.DECKS[S.decks[i]].name) + '</div><select id="deckSel' + i + '" aria-label="' + lb + '">' + deckOptions(S.decks[i])
@@ -227,6 +229,7 @@ function renderLobby() {
   { const l = store.get('vg.lastRoom'); const ok = online && l && l.code && Date.now() - (l.t || 0) < 12 * 3600e3; $('#rejoinBtn').hidden = !ok; if (ok) $('#rejoinBtn').textContent = 'กลับเข้าห้องล่าสุด ' + l.code.toUpperCase(); }
   if (LOCAL) { if (online) Rooms.start(); else Rooms.stop(); const l = store.get('vg.qlLast'); const ok = online && l && /^[A-Z2-9]{6}$/.test(l.code || '') && Date.now() - (l.t || 0) < 12 * 3600e3; $('#qlBack').hidden = !ok; if (ok) $('#qlBack').textContent = 'กลับเข้าห้องล่าสุด ' + l.code; }
   { const st = document.querySelector('.lb-stage'); if (st) st.classList.toggle('is-online', online); }
+  $('#lvlSec').hidden = S.mode !== 'bot'; document.querySelectorAll('#lvlChips button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lvl === S.level))); $('#lvlNote').textContent = LVL_NOTE[S.level] || '';
   $('#firstSec').hidden = online; $('#onlineSec').hidden = !online; $('#p2pSec').hidden = !online; $('#goRow').hidden = online;
   const sv = store.get('vg.save');
   $('#resumeBtn').hidden = !(sv && VG.DECKS[sv.decks[0]] && VG.DECKS[sv.decks[1]] && sv.history && sv.history.length);
@@ -336,21 +339,39 @@ function bscr(bx, by, h) { const L = LAY[S.lay]; return prj(L, b3(L, bx, by, h))
 /* the far player's side is the point mirror of the near player's through the middle of the board */
 function mirB(p, xy) { const L = LAY[S.lay]; return p === S.viewer ? [xy[0], xy[1]] : [L.BW - xy[0], L.BH - xy[1]]; }
 function scrOf(p, xy, h) { const b = mirB(p, xy); return bscr(b[0], b[1], h); }
+/* touch screens dock the answer box; 'vg.dock' = 'on' / 'off' overrides */
+function dockMode() { const o = store.get('vg.dock'); if (o === 'on') return true; if (o === 'off') return false; return !!((window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || navigator.maxTouchPoints > 0); }   // fit() also requires a small screen
+function insets() { const cs = getComputedStyle(document.documentElement); const n = v => parseFloat(cs.getPropertyValue(v)) || 0; return { t: n('--sa-t'), r: n('--sa-r'), b: n('--sa-b'), l: n('--sa-l') }; }
 function fit() {
   const w = $('#wrap'); if (!w.clientWidth) return;
   const lay = w.clientWidth / w.clientHeight < 0.92 ? 'port' : 'land';
-  const L = LAY[lay]; const k = Math.min(w.clientWidth / L.W, w.clientHeight / L.H);
+  const L = LAY[lay]; let k = Math.min(w.clientWidth / L.W, w.clientHeight / L.H);
   const st = $('#stage');
   st.style.width = L.W + 'px'; st.style.height = L.H + 'px';
-  st.style.transform = 'translate(' + Math.round((w.clientWidth - L.W * k) / 2) + 'px,' + Math.round((w.clientHeight - L.H * k) / 2) + 'px) scale(' + k + ')';
+  /* phones: the answer box and the menu leave the shrunken board for a dock in real screen size (bottom when upright, right when sideways), so buttons stay finger-sized */
+  const ins = insets(); const W0 = w.clientWidth - ins.l - ins.r, H0 = w.clientHeight - ins.t - ins.b;
+  const dock = dockMode() && (lay === 'port' ? W0 / L.W * (L.H - 130) <= H0 - 150 || W0 < 560 : true) && Math.min(W0, H0) <= 620;
+  const dk = $('#dock'); let tx, ty;
+  if (dock && lay === 'port') {
+    const Heff = L.H - 130; k = Math.min(W0 / L.W, (H0 - 170) / Heff); tx = ins.l + Math.round((W0 - L.W * k) / 2); ty = ins.t;
+    const top = ty + Math.round(Heff * k); Object.assign(dk.style, { left: ins.l + 'px', top: top + 'px', width: W0 + 'px', height: (ins.t + H0 - top) + 'px' });
+  } else if (dock) {
+    const dw = Math.max(200, Math.min(300, W0 - Math.round(L.W * H0 / L.H))); k = Math.min((W0 - dw) / L.W, H0 / L.H); tx = ins.l; ty = ins.t + Math.round((H0 - L.H * k) / 2);
+    const left = tx + Math.round(L.W * k); Object.assign(dk.style, { left: left + 'px', top: ins.t + 'px', width: (ins.l + W0 - left) + 'px', height: H0 + 'px' });
+  } else { tx = Math.round((w.clientWidth - L.W * k) / 2); ty = Math.round((w.clientHeight - L.H * k) / 2); }
+  dk.hidden = !dock; dk.className = dock ? 'd-' + lay : '';
+  for (const id of ['menu', 'prompt']) { const e = $('#' + id); const home = dock ? dk : $('#hud'); if (e.parentNode !== home) home.appendChild(e); }
+  w.classList.toggle('docked', !!dock); S.docked = !!dock;
+  st.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + k + ')';
   st.className = 'stage-' + lay;
   const changed = S.lay !== lay; S.lay = lay;
   const sc = $('#scene'); sc.style.perspective = L.D + 'px'; sc.style.perspectiveOrigin = L.cx + 'px ' + L.oy + 'px';
   const pn = $('#plane'); pn.style.left = (L.cx - L.BW / 2) + 'px'; pn.style.top = (L.hy - L.BH) + 'px'; pn.style.width = L.BW + 'px'; pn.style.height = L.BH + 'px'; pn.style.transform = 'rotateX(' + L.th + 'deg)';
   const sky = $('#sky'); sky.style.setProperty('--hx', L.cx + 'px'); sky.style.setProperty('--hz', (prj(L, b3(L, 0, 0, 0))[1] - 6) + 'px');
   const put = (el, r) => { if (!r) { el.style.display = 'none'; return; } el.style.display = ''; el.style.left = r[0] + 'px'; el.style.top = r[1] + 'px'; if (r[2]) el.style.width = r[2] + 'px'; if (r[3]) el.style.height = r[3] + 'px'; };
-  put($('#side'), L.side); put($('#prompt'), L.prompt); put($('#log'), L.log);
-  for (const id of ['phase', 'menu']) { const e = $('#' + id); const left = L[id][2] === 'l'; e.style.left = left ? L[id][0] + 'px' : 'auto'; e.style.right = left ? 'auto' : (L.W - L[id][0]) + 'px'; e.style.top = L[id][1] + 'px'; }
+  if (S.docked) { $('#prompt').style.cssText = ''; $('#menu').style.cssText = ''; put($('#side'), lay === 'land' ? [L.side[0], L.side[1], L.side[2], 440] : L.side); put($('#log'), lay === 'land' ? [L.log[0], 456, L.log[2], L.H - 464] : L.log); }
+  else { put($('#side'), L.side); put($('#prompt'), L.prompt); put($('#log'), L.log); }
+  for (const id of S.docked ? ['phase'] : ['phase', 'menu']) { const e = $('#' + id); const left = L[id][2] === 'l'; e.style.left = left ? L[id][0] + 'px' : 'auto'; e.style.right = left ? 'auto' : (L.W - L[id][0]) + 'px'; e.style.top = L[id][1] + 'px'; }
   const cta = $('#cta'); if (L.cta) { cta.style.display = ''; cta.style.right = (L.W - L.cta[0]) + 'px'; cta.style.bottom = (L.H - L.cta[1]) + 'px'; } else cta.style.display = 'none';
   $('#cutin').style.top = L.cut + 'px';
   { const c = $('#clash'); if (L.clash) { c.style.display = ''; c.style.right = (L.W - L.clash[0]) + 'px'; c.style.top = L.clash[1] + 'px'; } else c.style.display = 'none'; }
@@ -862,7 +883,7 @@ async function run() {
         if (d.player === S.seat) S.sending = false;
         continue;
       }
-      if (S.mode === 'bot' && d.player !== S.seat) { S.busy = false; render(); S.busy = true; await sleep(480 / S.speed); if (S.game !== g) return; g.answer(VG.bot(g)); save(); continue; }
+      if (S.mode === 'bot' && d.player !== S.seat) { S.busy = false; render(); S.busy = true; await sleep(480 / S.speed); if (S.game !== g) return; g.answer(VG.bot(g, S.level)); save(); continue; }
       break;
     }
   } finally { S.running = false; S.busy = false; }
@@ -895,7 +916,7 @@ function save() {
   store.set('vg.save', Object.assign({}, S.meta, { history: S.game.history }));
 }
 function newLocal(o) {
-  S.mode = o.mode; S.seat = o.mode === 'bot' ? 0 : 0; S.meta = { mode: o.mode, decks: o.decks.slice(), names: o.names, first: o.first, seed: o.seed };
+  S.mode = o.mode; S.seat = o.mode === 'bot' ? 0 : 0; if (o.level && VG.BOT_LEVELS.includes(o.level)) S.level = o.level; S.meta = { mode: o.mode, level: S.level, decks: o.decks.slice(), names: o.names, first: o.first, seed: o.seed };
   S.cfg = { seed: o.seed, first: o.first, players: [{ name: o.names[0], deck: VG.DECKS[o.decks[0]] }, { name: o.names[1], deck: VG.DECKS[o.decks[1]] }] };
   let g = null;
   if (o.history && o.history.length) { try { g = VG.Game.replay(S.cfg, o.history); g.snapOn = true; g.events.length = 0; } catch (e) { g = null; store.del('vg.save'); } }
@@ -1762,7 +1783,7 @@ const Acct = {
     if (!this.s || !g || !g.over || g.vgRec || !S.cfg) return; g.vgRec = true;
     const seat = S.mode === 'solo' ? 0 : S.seat || 0; const o = g.over; const P = S.cfg.players || [];
     const res = o.winner === seat ? 'win' : o.winner === 1 - seat ? 'loss' : 'draw';
-    const row = { owner: this.s.user.id, mode: S.mode === 'online' || S.mode === 'bot' ? S.mode : 'solo', my_deck: String(P[seat] && P[seat].deck && P[seat].deck.name || '').slice(0, 80), opp_name: String(P[1 - seat] && P[1 - seat].name || (S.mode === 'bot' ? 'CPU' : '')).slice(0, 40), opp_deck: String(P[1 - seat] && P[1 - seat].deck && P[1 - seat].deck.name || '').slice(0, 80), result: res, turns: g.turnNo || 0, reason: String(o.reason || '').slice(0, 40) };
+    const row = { owner: this.s.user.id, mode: S.mode === 'online' || S.mode === 'bot' ? S.mode : 'solo', my_deck: String(P[seat] && P[seat].deck && P[seat].deck.name || '').slice(0, 80), opp_name: String(S.mode === 'bot' ? 'CPU ' + (LVL_NAME[S.level] || '') : P[1 - seat] && P[1 - seat].name || '').slice(0, 40), opp_deck: String(P[1 - seat] && P[1 - seat].deck && P[1 - seat].deck.name || '').slice(0, 80), result: res, turns: g.turnNo || 0, reason: String(o.reason || '').slice(0, 40) };
     this.req('/rest/v1/matches', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: row }).catch(() => {});
   },
   async matches() { return await this.req('/rest/v1/matches?select=played_at,mode,my_deck,opp_name,opp_deck,result,turns,reason&order=played_at.desc&limit=300') || []; },
@@ -2187,6 +2208,9 @@ const Lobby = {
 
 /* ================= boot ================= */
 function boot() {
+  { const lv = store.get('vg.botLevel'); if (VG.BOT_LEVELS.includes(lv)) S.level = lv; }
+  if (MobUpd.native()) { document.documentElement.classList.add('app-' + MobUpd.plat()); console.log('[VGDL] ready ' + (LOCAL && LOCAL.ver) + ' ' + MobUpd.plat() + ' cards ' + (VG.DB && VG.DB.rows ? VG.DB.rows.length : 0) + ' ' + innerWidth + 'x' + innerHeight); MobUpd.check(); const A = window.Capacitor.Plugins && window.Capacitor.Plugins.App; if (A && A.addListener) A.addListener('backButton', () => phoneBack()); }
+  $('#lvlChips').addEventListener('click', e => { const b = e.target.closest('[data-lvl]'); if (!b) return; S.level = b.dataset.lvl; store.set('vg.botLevel', S.level); renderLobby(); });
   const sp = store.get('vg.speed'); if (sp === 2.5 || sp === 6) { S.speed = sp; $('#mSpeed').textContent = 'ความเร็ว: ' + (sp === 2.5 ? 'เร็ว' : 'เร็วมาก'); }
   if (window.VG_DB_DATA) VG.loadDB(window.VG_DB_DATA);
   if (window.VG_JP_DATA) VG.loadJP(window.VG_JP_DATA);
@@ -2212,6 +2236,46 @@ function boot() {
   wire(); renderLobby(); loadImages();
   My.sync();
 }
-window.VGUI = { S, Net, My, P2P, QL, Rooms, MQ, Acct, Friends, Presence, acctOpen, newLocal, submit, undo, renderLobby, store, esc, statLine, fmtText, cardNote, staticCard, tagOf, imgFor, $, openCard, closeCard, CW, Sfx };
+
+/* phone app (Capacitor build): at start, ask GitHub for the newest release; when it is newer than this build, block play with a download button
+   (Android: the .apk, installs over this one; iPhone: the .ipa page, installed again with Sideloadly/AltStore). No answer → play on. */
+
+/* Android back button in the phone app: close the top window, step back from the builder; in a fight it only reminds; on the title screen it leaves the app */
+function phoneBack() {
+  const vis = id => { const e = document.getElementById(id); return e && !e.hidden; };
+  if (vis('updGate')) return;
+  if (vis('cardwin')) return closeCard();
+  if (vis('picker')) { const c = $('#picker [data-close]'); if (c) c.click(); else $('#picker').hidden = true; return; }
+  if (vis('acct') && !Acct.gate()) { const c = $('#acct [data-close]'); if (c) c.click(); else $('#acct').hidden = true; return; }
+  if (vis('drawer')) return Lobby.drawer(null);
+  if (vis('builder')) return $('#bdBack').click();
+  if (vis('mydecks')) return $('#dkBack').click();
+  if (!$('#table').hidden) return noteToast('ออกจากไฟท์ได้ที่ปุ่ม "ออก" ในเมนู');
+  const A = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App; if (A && A.exitApp) A.exitApp();
+}
+const MobUpd = {
+  native() { const C = window.Capacitor; return !!(C && C.isNativePlatform && C.isNativePlatform()); },
+  plat() { const C = window.Capacitor; return C && C.getPlatform ? C.getPlatform() : 'web'; },
+  num(v) { return String(v || '').replace(/^v/, '').split('.').map(n => parseInt(n, 10) || 0); },
+  newer(a, b) { const x = this.num(a), y = this.num(b); for (let i = 0; i < Math.max(x.length, y.length); i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; },
+  async check() {
+    if (!LOCAL || !LOCAL.ver || !this.native()) return;
+    try {
+      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 10000);
+      const r = await fetch('https://api.github.com/repos/' + LOCAL.repo + '/releases/latest', { signal: ctl.signal, headers: { Accept: 'application/vnd.github+json' } }); clearTimeout(t);
+      if (!r.ok) return; const rel = await r.json(); if (!rel || !rel.tag_name || !this.newer(rel.tag_name, LOCAL.ver)) return;
+      const ios = this.plat() === 'ios'; const asset = (rel.assets || []).find(a => ios ? /\.ipa$/i.test(a.name) : /\.apk$/i.test(a.name));
+      if (!asset) return; this.show(rel.tag_name.replace(/^v/, ''), ios ? rel.html_url : asset.browser_download_url, ios);
+    } catch (e) { /* offline or GitHub busy: play on */ }
+  },
+  show(ver, url, ios) {
+    const el = document.createElement('div'); el.id = 'updGate'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true');
+    el.innerHTML = '<div class="ug-box"><div class="lb-emblem" aria-hidden="true"><i></i><i></i><i></i><b>D</b></div><h2>มีเวอร์ชันใหม่ ' + esc(ver) + '</h2><p>เวอร์ชันนี้ ' + esc(LOCAL.ver) + ' — ต้องอัปเดตก่อนเล่น เพื่อให้เล่นออนไลน์กับเพื่อนได้ตรงกัน</p>'
+      + (ios ? '<p class="ug-s">ดาวน์โหลดไฟล์ .ipa แล้วติดตั้งทับด้วย Sideloadly หรือ AltStore เหมือนครั้งแรก</p>' : '<p class="ug-s">ดาวน์โหลดไฟล์ .apk แล้วเปิดติดตั้งทับได้เลย เด็คและบัญชีอยู่ครบ</p>')
+      + '<a class="go" id="ugGo" href="' + esc(url) + '">ดาวน์โหลดเวอร์ชัน ' + esc(ver) + '</a></div>';
+    document.body.appendChild(el); el.querySelector('#ugGo').addEventListener('click', e => { e.preventDefault(); location.href = url; });
+  },
+};
+window.VGUI = { MobUpd, phoneBack,  S, Net, My, P2P, QL, Rooms, MQ, Acct, Friends, Presence, acctOpen, newLocal, submit, undo, renderLobby, store, esc, statLine, fmtText, cardNote, staticCard, tagOf, imgFor, $, openCard, closeCard, CW, Sfx };
 boot();
 })();

@@ -1176,3 +1176,29 @@ p.manual a, p.betan a, .bd-list a, .irow a { color: var(--cyan); }
 .has-back .card.gz .cb { background-image: var(--cbimgG, var(--cbimg)); }
 .ntoast { position: fixed; left: 50%; bottom: 24px; z-index: 2700; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; max-width: min(560px, calc(100vw - 32px)); padding: 10px 16px; border-radius: 12px 3px 12px 3px; border: 1px solid color-mix(in srgb, var(--gold) 60%, var(--line)); background: rgba(14, 16, 40, .96); color: #eef0ff; font-size: 14px; box-shadow: 0 12px 40px rgba(0, 0, 0, .55); transition: opacity .2s, transform .2s; }
 .ntoast.on { opacity: 1; transform: translate(-50%, 0); }
+
+/* V74 phones: answer box + menu docked in real screen size (fit() places #dock), safe areas, finger-sized targets */
+:root { --sa-t: env(safe-area-inset-top, 0px); --sa-r: env(safe-area-inset-right, 0px); --sa-b: env(safe-area-inset-bottom, 0px); --sa-l: env(safe-area-inset-left, 0px); }
+#dock { position: absolute; z-index: 760; display: flex; flex-direction: column; gap: 6px; padding: 6px 8px 8px; box-sizing: border-box; pointer-events: none; }
+#dock > * { pointer-events: auto; }
+#dock #menu { position: static; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+#dock #menu .btn { font-size: 13px; padding: 0 12px; min-height: 36px; transform: none; border-radius: 10px; }
+#dock #prompt, #dock #prompt.ask { position: relative; inset: auto !important; left: auto !important; top: auto !important; width: auto !important; height: auto !important; min-height: 0; flex: 1 1 auto; overflow: auto; justify-content: flex-start; align-items: stretch; text-align: left; gap: 6px; padding: 10px 12px; border-radius: 14px; translate: none; }
+#dock #prompt.ask::after { top: -10px; font-size: 11px; }
+#dock #prompt .pt, #dock #prompt.live .pt, #dock #prompt.ask .pt { font-size: 16px; }
+#dock #prompt .ps, #dock #prompt.live .ps, #dock #prompt.ask .ps { font-size: 13px; max-width: none; }
+#dock #prompt .pb, #dock #prompt.ask .pb { max-height: none; overflow: visible; gap: 8px; justify-content: flex-start; }
+#dock #prompt .btn, #dock #prompt.live .btn, #dock #prompt.ask .btn { min-height: 44px; min-width: 64px; font-size: 15px; padding: 8px 14px; border-radius: 10px; }
+#dock.d-land #prompt .btn { flex: 1 1 100%; }
+#dock.d-land #menu { justify-content: stretch; } #dock.d-land #menu .btn { flex: 1 1 40%; }
+#wrap.docked #cta { display: none !important; }
+@media (pointer: coarse) { body { -webkit-tap-highlight-color: transparent; overscroll-behavior: none; } button, .btn, select, input { touch-action: manipulation; } }
+#dock #prompt .btn { white-space: normal; overflow-wrap: anywhere; text-align: left; line-height: 1.25; }
+#dock.d-land { gap: 5px; padding: 4px 6px 6px; }
+#dock.d-land #menu { gap: 4px; } #dock.d-land #menu .btn { flex: 1 1 22%; min-height: 32px; font-size: 11.5px; padding: 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#dock.d-land #prompt .pt { font-size: 15px; } #dock.d-land #prompt .btn { min-height: 42px; font-size: 14px; }
+#dock.d-land #menu .btn { flex: 1 1 42%; text-overflow: clip; font-size: 12px; }
+#updGate { position: fixed; inset: 0; z-index: 99999; display: grid; place-items: center; padding: max(16px, var(--sa-t)) max(16px, var(--sa-r)) max(16px, var(--sa-b)) max(16px, var(--sa-l)); background: radial-gradient(circle at 50% 40%, rgba(40, 30, 90, .96), rgba(4, 5, 14, .99) 70%); color: #eef0ff; }
+#updGate .ug-box { max-width: 420px; display: grid; justify-items: center; gap: 12px; text-align: center; }
+#updGate h2 { margin: 6px 0 0; font-size: 24px; } #updGate p { margin: 0; color: #c9cdf0; line-height: 1.5; } #updGate .ug-s { font-size: 14px; color: #9aa0d0; }
+#updGate .go { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 28px; margin-top: 8px; border-radius: 12px; text-decoration: none; font-weight: 700; }

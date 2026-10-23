@@ -45,6 +45,15 @@
           <button type="button" data-first="1" aria-pressed="false">อีกฝั่ง</button>
         </div>
       </section>
+      <section class="lb-sec" id="lvlSec" hidden>
+        <h2>ระดับบอท</h2>
+        <div class="chips" id="lvlChips">
+          <button type="button" data-lvl="easy" aria-pressed="false">ง่าย</button>
+          <button type="button" data-lvl="normal" aria-pressed="true">ปกติ</button>
+          <button type="button" data-lvl="hard" aria-pressed="false">ยาก</button>
+        </div>
+        <p class="note" id="lvlNote"></p>
+      </section>
       <section class="lb-sec" id="onlineSec" hidden>
         <h2>ห้องออนไลน์</h2>
         <div class="panel" id="roomPanel">
@@ -234,6 +243,7 @@
 <section id="table" hidden>
   <div id="wrap">
     <div id="revealBar" hidden></div>
+    <div id="dock" hidden></div>
     <div id="stage">
       <div id="sky"><i class="rays"></i><i class="glow"></i><i class="smoke"></i><i class="stars"></i><i class="embers"></i><i class="horizon"></i><i class="bolt"></i><i class="vign"></i></div>
       <div id="scene">

@@ -15,7 +15,7 @@ fs.writeFileSync(new URL('./dist/test.html', import.meta.url), '<!doctype html><
 { const ip = new URL('./src/img.json', import.meta.url); const img = fs.existsSync(ip) ? fs.readFileSync(ip, 'utf8').trim() : '[]';
   const cfgp = new URL('./app.config.json', import.meta.url); const cfg = fs.existsSync(cfgp) ? JSON.parse(fs.readFileSync(cfgp, 'utf8')) : {};   // account server (Supabase URL + public anon key); empty = accounts off
   const sb = process.env.VG_SB_URL ? { url: process.env.VG_SB_URL, key: process.env.VG_SB_KEY || '' } : cfg.supabase && cfg.supabase.url ? { url: cfg.supabase.url, key: cfg.supabase.key } : null;
-  const local = 'window.VG_LOCAL = { base: "https://en.cf-vanguard.com/wordpress/wp-content/images/cardlist/", jp: "https://cf-vanguard.com/wordpress/wp-content/images/cardlist/", img: ' + img + ', sb: ' + JSON.stringify(sb) + ' };\n';
+  const local = 'window.VG_LOCAL = { base: "https://en.cf-vanguard.com/wordpress/wp-content/images/cardlist/", jp: "https://cf-vanguard.com/wordpress/wp-content/images/cardlist/", img: ' + img + ', sb: ' + JSON.stringify(sb) + ', ver: ' + JSON.stringify(process.env.VG_VERSION || '') + ', repo: ' + JSON.stringify(process.env.VG_REPO || 'AclAireZ/vanguard-deck-lab') + ' };\n';
   const pj = fs.readFileSync(new URL('./vendor/peerjs.min.js', import.meta.url), 'utf8').replace(/\/\/# sourceMappingURL=.*$/m, '');   // PeerJS (MIT) for the quick room
   const mq = fs.readFileSync(new URL('./vendor/mqtt.min.js', import.meta.url), 'utf8').replace(/\/\/# sourceMappingURL=.*$/m, '');   // MQTT.js (MIT) for the room list and the relay when a direct link is blocked
   if (/<\/script/i.test(pj) || /<\/script/i.test(mq)) throw new Error('script close tag inside a vendor file');

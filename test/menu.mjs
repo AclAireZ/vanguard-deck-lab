@@ -24,7 +24,7 @@ for (const [w, h, tag] of [[1366, 768, 'land'], [400, 820, 'port']]) {
   await pg.click('#sfxBtn'); const sfx = await pg.evaluate(() => ({ p: document.querySelector('#sfxBtn').getAttribute('aria-pressed'), s: window.VGUI.store.get('vg.sfx') }));
   await pg.click('#goBtn'); await pg.waitForFunction(() => !document.querySelector('#table').hidden && window.VGUI.S.game, null, { timeout: 5000 });
   const cur = await pg.evaluate(() => !!document.querySelector('.curtain')); await pg.waitForTimeout(1200); const curGone = await pg.evaluate(() => !document.querySelector('.curtain'));
-  const good = early.mode === 'bot' && early.tag === 'CPU' && early.stage === 'VS CPU' && st.fans === 6 && st.vs && st.sw <= st.iw && st.op === 0 && st.intro === 'none' && (!lib || st.gs) && one.cls === 'one' && one.n === 1 && one.go
+  const good = early.mode === 'bot' && /^CPU( · (EASY|NORMAL|HARD))?$/.test(early.tag) && early.stage === 'VS CPU' && st.fans === 6 && st.vs && st.sw <= st.iw && st.op === 0 && st.intro === 'none' && (!lib || st.gs) && one.cls === 'one' && one.n === 1 && one.go
     && d1.open && d1.help && d1.opt && d2 && d3 && sfx.p === 'false' && sfx.s === false && cur && curGone && !errs.length;
   out[tag] = { early, st, one, d1, sfx, cur, errs: errs.slice(0, 3) }; if (!good) ok = false;
   await ctx.close();

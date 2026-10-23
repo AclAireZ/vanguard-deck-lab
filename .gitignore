@@ -8,3 +8,7 @@ app/electron/dist/
 *.bak.*
 *.v[0-9]*.bak
 smoke.png
+app/mobile/www/
+app/mobile/android/
+app/mobile/ios/
+app/mobile/node_modules/

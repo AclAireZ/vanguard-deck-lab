@@ -62,14 +62,14 @@ function pickCircle(G, d) {
   return [0];
 }
 
-function pickMain(G, d) {
+function pickMain(G, d, keepN) {
   const p = d.player, P = G.players[p]; const o = d.options;
   /* half-automatic skills end in a manual step the bot cannot do: it leaves them alone */
   const act = idxOf(d, x => x.a === 'act' && !(G.getAb(G.cards[x.iid], x.idx) || {}).assist); if (act >= 0) return [act];
   const va = idxOf(d, x => x.a === 'varm'); if (va >= 0) return [va];   // Völundr arms
   const ord = idxOf(d, x => x.a === 'order' && !(G.def(G.cards[x.iid]).play || {}).assist); if (ord >= 0) return [ord];
   const calls = o.map((x, i) => [x, i]).filter(([x]) => x.a === 'call');
-  const keep = G.grade(G.vg(p)) >= 3 ? 3 : 4;
+  const keep = keepN != null ? keepN : G.grade(G.vg(p)) >= 3 ? 3 : 4;
   if (calls.length && P.hand.length > keep) {
     const callable = [...new Set(calls.map(([x]) => x.iid))].map(i => G.cards[i]);
     const attackers = callable.filter(c => !G.def(c).sentinel && !G.def(c).trigger).sort((a, b) => G.def(b).power - G.def(a).power);
@@ -149,8 +149,57 @@ function pickGuard0(G, d) {
   return r || [];
 }
 
-VG.bot = function (G) {
-  const d = G.pending; if (!d) return null;
+/* levels: 'easy' plays loosely (a third of its choices are off, guards only to survive, wastes shields), 'normal' is the plain heuristic,
+   'hard' reads the drive check: guards a dangerous vanguard attack with room for triggers, guards cheap hits more readily, keeps five cards before calling, attacks with the vanguard first. */
+function chance(G) { let t = ((G.history.length + 1) * 0x9E3779B1 + (G.players[0].deck.length << 8) + G.turnNo) >>> 0; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }   // deterministic: same table → same answer (replays stay in sync)
+
+function easy(G, d) {
+  const r = chance(G); const p = d.player;
+  switch (d.kind) {
+    case 'main': { if (r < 0.35) return [idxOf(d, x => x.a === 'next')]; const calls = d.options.map((x, i) => [x, i]).filter(([x]) => x.a === 'call' && !G.at(p, x.circle)); if (calls.length && G.players[p].hand.length > 2 && r < 0.75) return [calls[Math.floor(r * 997) % calls.length][1]]; return pickMain(G, d); }
+    case 'attack': { if (r < 0.15) return [idxOf(d, x => x.a === 'end')]; const at = d.options.map((x, i) => [x, i]).filter(([x]) => x.a === 'attack' && x.target === G.vg(1 - p).iid); if (at.length) return [at[Math.floor(r * 991) % at.length][1]]; return pickAttack(G, d); }
+    case 'guard': {
+      const t = G.cards[d.target], a = G.cards[d.attacker]; const P = G.players[p]; const need = d.atk - d.dfn; if (need < 0) return [];
+      const lethal = t.zone === 'VC' && P.damage.length + G.stat(a).crit >= G.loseAt(p); if (!lethal && (t.zone !== 'VC' || r < 0.6)) return [];
+      const out = []; let sum = 0; for (let i = 0; i < d.options.length && sum <= need; i++) { if (d.options[i].a !== 'guard' && d.options[i].a !== 'intercept') continue; out.push(i); sum += G.guardShield(G.cards[d.options[i].iid]); }   // first cards that do it, big or small
+      return sum > need && !G.guardBadSel(d, out) ? out : [];
+    }
+    case 'mulligan': return [];
+    case 'boost': return r < 0.3 ? [1] : [0];
+  }
+  return null;
+}
+
+function hardGuard(G, d) {
+  const p = d.player, P = G.players[p]; const t = G.cards[d.target], a = G.cards[d.attacker]; const need = d.atk - d.dfn; if (need < 0) return [];
+  if (t.zone !== 'VC') return pickGuard(G, d);
+  const dmg = P.damage.length, lose = G.loseAt(p), crit = G.stat(a).crit; const drive = a.zone === 'VC' ? Math.max(0, G.stat(a).drive || 0) : 0;
+  const lethal = dmg + crit >= lose; const near = dmg + crit + (drive ? 1 : 0) >= lose;   // a critical trigger in the drive check would finish it
+  const cards = d.options.map((o, i) => ({ i, o, c: G.cards[o.iid], sh: G.guardShield(G.cards[o.iid]), sent: o.a === 'guard' && !!G.def(G.cards[o.iid]).sentinel && (G.def(G.cards[o.iid]).abilities || []).length > 0 }));
+  { const tk = cards.find(x => x.o.a === 'blitz' && x.c.ticket); if (tk && (near || dmg >= 3)) return [tk.i]; }
+  const normal = cards.filter(x => !x.sent && x.sh > 0).sort((x, y) => x.sh - y.sh); const total = normal.reduce((s, x) => s + x.sh, 0);
+  const sent = cards.find(x => x.sent && (G.def(x.c).abilities[0].cost ? P.hand.length >= 2 : true));
+  const pickN = target => { const out = []; let sum = 0; const pool = normal.slice(); while (sum < target && pool.length) { const rest = target - sum; let k = pool.findIndex(x => x.sh >= rest); if (k < 0) k = pool.length - 1; sum += pool[k].sh; out.push(pool[k].i); pool.splice(k, 1); } return sum >= target ? out : null; };
+  if (lethal || near) {
+    const want = need + 1 + 10000 * (lethal ? drive : Math.min(drive, 1));   // every drive check may add a trigger's +10000
+    if (sent && (total < want || want > 20000)) return [sent.i];
+    return pickN(want) || (sent ? [sent.i] : pickN(need + 1)) || [];
+  }
+  // not dangerous: take the damage early (it feeds counter-blasts and heal triggers), pay only cheap guards later on
+  if (dmg <= 1) return [];
+  const cheap = dmg >= lose - 2 ? 30000 : dmg >= lose - 3 ? 20000 : 10000;   // tuned on bot-vs-bot games (test/botlevels.mjs)
+  if (need + 1 > cheap || P.hand.length <= 3) return [];
+  return pickN(need + 1) || [];
+}
+
+function hardAttack(G, d) {
+  const p = d.player; const v = G.vg(p); const ov = G.vg(1 - p);
+  const vi = d.options.findIndex(x => x.a === 'attack' && x.iid === v.iid && x.target === ov.iid);   // the vanguard first: its drive triggers can still go to rear-guards that have not attacked
+  if (vi >= 0) { const b = G.at(p, 'BC'); const pw = G.stat(v).power + (b && !b.rest && G.stat(b).boost ? G.stat(b).power : 0); if (pw >= G.stat(ov).power) return [vi]; }
+  return pickAttack(G, d);
+}
+
+function bot(G, d) {
   switch (d.kind) {
     case 'mulligan': case 'cards': return pickCards(G, d);
     case 'circle': return pickCircle(G, d);
@@ -163,6 +212,14 @@ VG.bot = function (G) {
     case 'option': case 'order': return [0];
     default: return d.min > 0 ? d.options.slice(0, d.min).map((o, i) => i) : [];
   }
+}
+VG.BOT_LEVELS = ['easy', 'normal', 'hard'];
+VG.bot = function (G, level) {
+  const d = G.pending; if (!d) return null;
+  level = level || VG.botLevel || 'normal';
+  if (level === 'easy') { const r = easy(G, d); if (r) return r; }
+  if (level === 'hard') { if (d.kind === 'guard') return hardGuard(G, d); if (d.kind === 'attack') return hardAttack(G, d); if (d.kind === 'main') return pickMain(G, d, 5); }   // keeps five cards for guarding before calling more
+  return bot(G, d);
 };
 VG.keepValue = keepValue;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
