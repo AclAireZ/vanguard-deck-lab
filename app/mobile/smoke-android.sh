@@ -9,7 +9,8 @@ timeout 180 adb install -r "$APK" > install.txt 2>&1; note "install: $(tail -c 3
 grep -q Success install.txt || exit 1
 timeout 20 adb logcat -c
 timeout 30 adb shell am start -n com.aclairez.vanguarddecklab/.MainActivity; note "started"
-sleep 40
+for i in $(seq 1 12); do sleep 5; st=$(timeout 8 adb get-state 2>&1 | tr -d '\r'); timeout 10 adb logcat -d 2>/dev/null | grep -q '\[VGDL\] ready' && { note "page ready after $((i*5)) s"; break; }; [ "$st" = device ] || { note "device state after $((i*5)) s: $st"; }; done
+note "memory: $(timeout 10 adb shell cat /proc/meminfo | head -2 | tr -d '\r' | tr '\n' ' ')"
 timeout 60 adb logcat -d -v time > logcat.txt 2>&1
 note "logcat lines: $(wc -l < logcat.txt) · app pid: $(timeout 10 adb shell pidof com.aclairez.vanguarddecklab | tr -d '\r') · top: $(timeout 10 adb shell dumpsys activity activities | grep -m1 -E 'topResumedActivity|mResumedActivity' | tr -d '\r' | sed 's/^ *//')"
 timeout 30 adb exec-out screencap -p > android-shot.png
