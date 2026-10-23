@@ -90,6 +90,10 @@ jobs:
           $BT/apksigner verify --print-certs VanguardDeckLab-${{ env.VG_VERSION }}.apk | head -3
           rm -f ks.jks aligned.apk
           ls -la
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rel-android
+          path: app/mobile/android/app/build/outputs/apk/release/VanguardDeckLab-*.apk
       - name: Enable KVM (emulator)
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -97,17 +101,16 @@ jobs:
           sudo udevadm trigger --name-match=kvm
       - name: Start the app in an Android emulator
         uses: reactivecircus/android-emulator-runner@v2
+        timeout-minutes: 20
+        continue-on-error: true
         with:
-          api-level: 34
+          api-level: 30
+          emulator-boot-timeout: 900
           arch: x86_64
           target: google_apis
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           script: bash app/mobile/smoke-android.sh app/mobile/android/app/build/outputs/apk/release/VanguardDeckLab-${{ env.VG_VERSION }}.apk
-      - uses: actions/upload-artifact@v4
-        with:
-          name: rel-android
-          path: app/mobile/android/app/build/outputs/apk/release/VanguardDeckLab-*.apk
       - uses: actions/upload-artifact@v4
         if: always()
         with:

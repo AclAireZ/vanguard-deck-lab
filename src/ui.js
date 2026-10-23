@@ -2209,7 +2209,7 @@ const Lobby = {
 /* ================= boot ================= */
 function boot() {
   { const lv = store.get('vg.botLevel'); if (VG.BOT_LEVELS.includes(lv)) S.level = lv; }
-  if (MobUpd.native()) { document.documentElement.classList.add('app-' + MobUpd.plat()); console.log('[VGDL] ready ' + (LOCAL && LOCAL.ver) + ' ' + MobUpd.plat() + ' cards ' + (VG.DB && VG.DB.rows ? VG.DB.rows.length : 0) + ' ' + innerWidth + 'x' + innerHeight); MobUpd.check(); const A = window.Capacitor.Plugins && window.Capacitor.Plugins.App; if (A && A.addListener) A.addListener('backButton', () => phoneBack()); }
+  if (MobUpd.native()) { document.documentElement.classList.add('app-' + MobUpd.plat()); console.log('[VGDL] ready ' + (LOCAL && LOCAL.ver) + ' ' + MobUpd.plat() + ' cards ' + Object.keys(VG.CARDS).length + ' ' + innerWidth + 'x' + innerHeight); MobUpd.check(); const A = window.Capacitor.Plugins && window.Capacitor.Plugins.App; if (A && A.addListener) A.addListener('backButton', () => phoneBack()); }
   $('#lvlChips').addEventListener('click', e => { const b = e.target.closest('[data-lvl]'); if (!b) return; S.level = b.dataset.lvl; store.set('vg.botLevel', S.level); renderLobby(); });
   const sp = store.get('vg.speed'); if (sp === 2.5 || sp === 6) { S.speed = sp; $('#mSpeed').textContent = 'ความเร็ว: ' + (sp === 2.5 ? 'เร็ว' : 'เร็วมาก'); }
   if (window.VG_DB_DATA) VG.loadDB(window.VG_DB_DATA);
