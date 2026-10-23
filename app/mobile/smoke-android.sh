@@ -12,7 +12,8 @@ timeout 30 adb shell am start -n com.aclairez.vanguarddecklab/.MainActivity; not
 sleep 40
 timeout 30 adb logcat -d > logcat.txt
 timeout 30 adb exec-out screencap -p > android-shot.png
-grep -E "Capacitor/Console|VGDL|AndroidRuntime|chromium.*Uncaught" logcat.txt | tail -40 > console.txt
+note "webview: $(timeout 20 adb shell dumpsys package com.google.android.webview | grep -m1 versionName | tr -d ' \r')"
+grep -E "Capacitor|Console|VGDL|AndroidRuntime|chromium|Uncaught|SyntaxError" logcat.txt | tail -40 > console.txt
 msg=$(tail -c 2500 console.txt | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
 echo "::notice title=android app console::$msg"
 grep -q "\[VGDL\] ready" logcat.txt || { echo "::error::the game page did not start in the Android app"; exit 1; }

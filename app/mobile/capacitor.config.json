@@ -3,6 +3,12 @@
   "appName": "Vanguard Deck Lab",
   "webDir": "www",
   "backgroundColor": "#05060f",
-  "android": { "allowMixedContent": false },
-  "ios": { "contentInset": "never", "backgroundColor": "#05060f" }
+  "android": {
+    "allowMixedContent": false
+  },
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#05060f"
+  },
+  "loggingBehavior": "production"
 }
