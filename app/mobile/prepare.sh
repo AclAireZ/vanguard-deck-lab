@@ -4,8 +4,8 @@
 set -e
 cd "$(dirname "$0")"
 P=$1; V=$2; N=$3
-mkdir -p www && cp ../../dist/local/VanguardDeckLab.html www/index.html
 [ -d node_modules ] || npm install --no-audit --no-fund
+mkdir -p www && node lower.mjs ../../dist/local/VanguardDeckLab.html www/index.html
 [ -d "$P" ] || npx cap add "$P"
 if [ "$P" = android ]; then
   npx capacitor-assets generate --android --iconBackgroundColor '#0b0710' --iconBackgroundColorDark '#0b0710' --splashBackgroundColor '#05060f' --splashBackgroundColorDark '#05060f'

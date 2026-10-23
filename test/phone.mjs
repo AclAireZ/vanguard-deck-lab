@@ -1,7 +1,7 @@
 // Phone check: lobby (VS CPU + level), a game vs the hard bot with taps, portrait and landscape, iPhone and small Android sizes.  node test/phone.mjs
 const { chromium } = await import(process.env.PW || '/opt/npm-tools/node_modules/playwright/index.mjs');
 import fs from 'node:fs';
-const html = fs.readFileSync(new URL('../dist/local/VanguardDeckLab.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(process.env.HTML || new URL('../dist/local/VanguardDeckLab.html', import.meta.url), 'utf8');
 const sizes = (process.env.SIZES || 'ip-port:390x844,ip-land:844x390,sa-port:360x740,sa-land:740x360').split(',').map(x => { const [n, wh] = x.split(':'); const [w, h] = wh.split('x').map(Number); return { n, w, h }; });
 const b = await chromium.launch(); let bad = 0;
 for (const z of sizes) {

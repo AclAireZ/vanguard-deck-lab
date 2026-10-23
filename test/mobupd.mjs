@@ -1,7 +1,7 @@
 // Phone app update gate: a stand-in Capacitor + a stand-in GitHub answer.  VG_VERSION=1.0.5 node build.mjs && node test/mobupd.mjs
 const { chromium } = await import(process.env.PW || '/opt/npm-tools/node_modules/playwright/index.mjs');
 import fs from 'node:fs';
-const html = fs.readFileSync(new URL('../dist/local/VanguardDeckLab.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(process.env.HTML || new URL('../dist/local/VanguardDeckLab.html', import.meta.url), 'utf8');
 const b = await chromium.launch(); let bad = 0;
 async function run(plat, tag, expect) {
   const pg = await b.newPage({ viewport: { width: 390, height: 844 } });

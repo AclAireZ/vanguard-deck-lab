@@ -104,7 +104,7 @@ jobs:
         timeout-minutes: 20
         continue-on-error: true
         with:
-          api-level: 30
+          api-level: 34
           emulator-boot-timeout: 900
           arch: x86_64
           target: google_apis
